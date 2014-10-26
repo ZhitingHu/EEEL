@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ee_solver.hpp"
+#include "solver.hpp"
+#include "dataset.hpp"
 #include "context.hpp"
 #include <vector>
 #include <cstdint>
@@ -10,12 +11,11 @@ namespace entity {
 
 class EEEngine {
 public:
-  EEEngine();
-  ~EEEngine();
+  EEEngine() {};
+  ~EEEngine() {};
 
   void ReadData();
 
-  // Can be called concurrently.
   void Start();
 
   // Compute the classification error on the test set.
@@ -28,7 +28,7 @@ private:
   // ============== EE Variables ==================
   int num_train_data_;
 
-  std::vector<Datum*> train_data_;
+  Dataset train_data_;
 };
 
 }  // namespace entity

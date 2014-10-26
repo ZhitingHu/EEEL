@@ -15,6 +15,7 @@ CXXFLAGS = -g \
            -fno-builtin-realloc \
            -fno-builtin-free \
            -fno-omit-frame-pointer \
+           -std=c++0x
            #-std=c++11
 
 INCLUDE_DIRS=
