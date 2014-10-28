@@ -18,9 +18,6 @@ public:
 
   void Start();
 
-  // Compute the classification error on the test set.
-  //float TestClassificationError(BackPropSolver* solver) const;
-
 private:    // private functions
 
 private:

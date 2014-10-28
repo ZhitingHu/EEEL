@@ -1,5 +1,7 @@
 #pragma once
 
+#include "blob.hpp"
+
 #include <cstdint>
 #include <vector>
 
@@ -29,10 +31,8 @@ private:
   void Test();
 
 private:
-  // e_[i]: entity_i 's vector
-  float** e_;
-  // m_[i]: distance metric of category i
-  float*** m_;
+  vector<Blob*> entities_;
+  vector<Blob*> categories_;
 
   //
   const int num_entity_;
