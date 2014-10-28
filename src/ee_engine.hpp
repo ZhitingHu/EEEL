@@ -1,6 +1,9 @@
+// Author: Zhi-Ting Hu, Po-Yao Huang
+// Date: 2014.10.26
 #pragma once
 
 #include "solver.hpp"
+#include "common.hpp"
 #include "dataset.hpp"
 #include "context.hpp"
 #include <vector>
@@ -11,8 +14,8 @@ namespace entity {
 
 class EEEngine {
 public:
-  EEEngine() {};
-  ~EEEngine() {};
+  EEEngine();
+  ~EEEngine();
 
   void ReadData();
 
@@ -20,10 +23,11 @@ public:
 
 private:    // private functions
 
-private:
+	private:
 
   // ============== EE Variables ==================
-  int num_train_data_;
+  int32_t num_train_data_;
+  int32_t num_test_data_;
 
   Dataset train_data_;
 };

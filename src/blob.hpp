@@ -9,15 +9,20 @@ namespace entity {
 
 class Blob {
 public:
-  Blob(const int num_row): num_row_(num_row), num_col_(1), count_(num_row),
-      matrix_(false) {};
-  ~Blob() {};
+  Blob(const int num_row) : num_row_(num_row), num_col_(1), count_(num_row),
+  matrix_(false) 
+  {data_ = new float[num_row];};
+
+  ~Blob() {delete data_;};
   
   // read only 
   const float* data() const { return data_; }
   // mutable
   float* mutable_data() { return data_; }
 
+  // write data // add by bernie // to be discussed
+  void set_data(const int i, const float value) { data_[i] = value; }
+  
   inline int count() const { return count_; }
     
   inline int offset(const int r, const int c) const {

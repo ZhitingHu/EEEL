@@ -1,7 +1,16 @@
+// Author: Dai Wei (wdai@cs.cmu.edu)
+// Date: 2013
+
 #include "context.hpp"
-//#include <gflags/gflags.h>
-//#include <glog/logging.h>
+#include "gflags/gflags.h"
+#include "glog/logging.h"
 #include <vector>
+#include <string>
+#pragma comment(lib,"libglog.lib")  
+#pragma comment(lib,"gflags.lib")  
+#pragma comment(lib,"gflags_nothreads.lib")	
+
+using namespace gflags;
 
 namespace util {
 
@@ -12,20 +21,12 @@ Context& Context::get_instance()
 }
 
 Context::Context() {
-  //std::vector<google::CommandLineFlagInfo> flags;
-  //google::GetAllFlags(&flags);
-  //for (size_t i = 0; i < flags.size(); i++) {
-  //  google::CommandLineFlagInfo& flag = flags[i];
-  //  ctx_[flag.name] = flag.is_default ? flag.default_value : flag.current_value;
-  //}
-  dim_entity_vector_ = 100;
-  distance_metric_mode_ = 0;
-  dataset_path_ = "";
-  num_epochs_ = 1;
-  batch_size_ = 50;
-  num_neg_sample_ = 10;
-  learning_rate_ = 0.1;
-  num_batches_per_eval_ = 10;
+  std::vector<CommandLineFlagInfo> flags;
+  GetAllFlags(&flags);
+  for (size_t i = 0; i < flags.size(); ++i) {
+    CommandLineFlagInfo& flag = flags[i];
+    ctx_[flag.name] = flag.is_default ? flag.default_value : flag.current_value;
+  }
 }
 
 // -------------------- Getters ----------------------
@@ -44,12 +45,8 @@ bool Context::get_bool(std::string key) {
 
 std::string Context::get_string(std::string key) {
   auto it = ctx_.find(key);
-  //LOG_IF(FATAL, it == ctx_.end())
-  //    << "Failed to lookup " << key << " in context.";
-  if (it == ctx_.end()) {
-    std::cerr << "Failed to lookup " << key << " in context." << std::endl;
-    exit(0);
-  }
+  LOG_IF(FATAL, it == ctx_.end())
+      << "Failed to lookup " << key << " in context.";
   return it->second;
 }
 

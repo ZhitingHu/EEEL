@@ -25,28 +25,8 @@ public:
   void set(std::string key, double value);
   void set(std::string key, bool value);
   void set(std::string key, std::string value);
-  
-  const int get_dim_entity_vector() { return dim_entity_vector_; }
-  const int get_distance_metric_mode() { return distance_metric_mode_; }
-  const std::string& get_dataset_path() { return dataset_path_; }
-  const int get_num_epochs() { return num_epochs_; }
-  const int get_batch_size() { return batch_size_; }
-  const int get_num_neg_sample() { return num_neg_sample_; }
-  const double get_learning_rate() { return learning_rate_; }
-  const int get_num_batches_per_eval() { return num_batches_per_eval_; }
-  
- private:
-  
-  // entity embedding parameters
-  int dim_entity_vector_; // 100
-  int distance_metric_mode_; //
-  std::string dataset_path_; //
-  int num_epochs_; // 1
-  int batch_size_; // 50
-  int num_neg_sample_; // 50
-  double learning_rate_; // 0.1, Initial step size
-  int num_batches_per_eval_; // 10, Number of batches per evaluation
 
+ private:
   // Private constructor. Store all the gflags values.
   Context();
   // Underlying data structure
