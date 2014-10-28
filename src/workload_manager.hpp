@@ -3,6 +3,7 @@
 //#include <glog/logging.h>
 #include <cstdint>
 
+/*
 namespace entity {
 
 struct WorkloadManagerConfig {
@@ -87,4 +88,6 @@ private:
 };
 
 
-}  // namespace dnn
+}  // namespace entity
+
+*/
