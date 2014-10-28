@@ -9,11 +9,12 @@ namespace entity {
 
 class Blob {
 public:
-  Blob(const int num_row) : num_row_(num_row), num_col_(1), count_(num_row),
-  matrix_(false) 
-  {data_ = new float[num_row];};
+  Blob(const int num_row, const int num_col = 1) : num_row_(num_row), num_col_(num_col), 
+      count_(num_row * num_col), matrix_(false) { 
+    data_ = new float[count_]; 
+  };
 
-  ~Blob() {delete data_;};
+  ~Blob() { delete data_; };
   
   // read only 
   const float* data() const { return data_; }

@@ -29,11 +29,19 @@ private:
   /// used in optimization 
 
   // entity_id => index in update_entity_values_
-  map<int, int> update_entity_id_index_;
-  vector<Blob*> update_entity_values_;
+  //map<int, int> entity_id_index_;
   // category_id => index in update_category_values_ 
-  map<int, int> update_category_id_index_;
-  vector<Blob*> update_category_values_;
+  //map<int, int> category_id_index_;
+
+  // negative samples 
+  vector<int> neg_entity_id_;
+  vector<Path*> entity_i_neg_entity_paths_;
+  // gradients 
+  vector<Blob*> entity_gradient_;
+  
+  //
+  vector<int> category_id_;
+  vector<Blob*> category_gradient_;
 };
 
 }  // namespace entity

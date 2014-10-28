@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <vector>
 using namespace std;
+
 namespace entity {
 
 class Solver {
@@ -17,7 +18,7 @@ public:
   // Initialization
   //void Init(); => merge into constructore
   void RandInit();
-  void Solve();
+  void Solve(const vector<datum*>& minibatch);
 
   float ComputeObjective(); // same as Likelihood();
   
@@ -32,25 +33,23 @@ private:
   void Test();  
   float Likelihood(Blob* entity, float ***M_diag); //objective func P(y|x,M)
 
-
 private:
   // e_[i]: entity_i 's vector
   //float** e_;
 	  
-    
   // not sure what's your plan with categories and M, reserve Mij first and simplify it to diag
   float*** M_diag_;
 
-
   vector<Blob*> entities_;
   vector<Blob*> categories_;
+
+  const Dataset *dataset_;  // data passed from parsing inputs TODO
 
   // const parameters
   const int num_entity_;
   const int num_category_;
   const int num_neg_sample_;
   const int num_data_;
-  const Dataset *dataset_;  // data passed from parsing inputs
   const int dim_entity_vector_;
   const int distance_metric_mode_;
   const double learning_rate_;

@@ -11,8 +11,6 @@
 #include "string_util.hpp"
 #include "context.hpp"
 
-
-
 namespace entity {
 	
 namespace {
@@ -27,40 +25,22 @@ namespace {
 }   // anonymous namespace
 	
 // Constructor
-Solver::Solver(int32_t num_entity, int32_t num_cat, int32_t num_ns, int32_t num_data,
-               Dataset* dataset, int32_t dim, int32_t mode, double rate) :
-	num_entity_(num_entity),
+Solver::Solver(int32_t num_entity, int32_t num_cat, int32_t num_ns, 
+    int32_t num_data, Dataset* dataset, int32_t dim, int32_t mode, double rate) : num_entity_(num_entity),
 	num_category_(num_cat),
 	num_neg_sample_(num_ns),
     num_data_(num_data),
     dataset_(dataset),
 	dim_entity_vector_(dim),
 	distance_metric_mode_(mode),
-	learning_rate_(rate)
-{
-		
-}// constructor
+	learning_rate_(rate) { }
 
 // Destructor
 Solver::~Solver() {
-
   // clean vectors
   std::vector<Blob*>().swap(entities_);
   std::vector<Blob*>().swap(categories_);
-
-    /*
-	for (int i = 0; i < dim_entity_vector_; ++i){
-		delete[] e_[i];
-	}
-	delete[] e_;
-
-	for (int i = 0; i < num_entity_; ++i){
-		delete[] m_[i];
-	}
-	delete[] m_;
-    */
-
-}// destructor
+}
 	
 // RandInit()
 void Solver::RandInit() {
