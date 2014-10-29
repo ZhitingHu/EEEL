@@ -7,5 +7,10 @@ using namespace std;
 
 namespace entity {
 
+enum DistMetricMode {
+  FULL, // full PSD matrix
+  DIAG, // diagonal matrix
+  EDIAG // diagonal matirx with tied diagonal elements
+};
 
-}  // namespace dnn
+}  // namespace entity

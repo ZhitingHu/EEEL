@@ -27,19 +27,13 @@ private:
   Path* category_path_;
 
   /// used in optimization 
-
-  // entity_id => index in update_entity_values_
-  //map<int, int> entity_id_index_;
-  // category_id => index in update_category_values_ 
-  //map<int, int> category_id_index_;
-
+  Blob* entity_i_gradient_;
+  Blob* entity_o_gradient_;  
   // negative samples 
   vector<int> neg_entity_id_;
-  vector<Path*> entity_i_neg_entity_paths_;
-  // gradients 
+  // paths between entity_i_ and neg_entities
+  vector<Path*> entity_i_neg_paths_;
   vector<Blob*> entity_gradient_;
-  
-  //
   vector<int> category_id_;
   vector<Blob*> category_gradient_;
 };

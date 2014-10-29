@@ -15,29 +15,21 @@ namespace entity {
 	
 namespace {
 
-	int MyRandom(int i) {
-		static std::default_random_engine e;
-		return e() % i;
-	}
-	// Random init params to [-kRandInitRange, kRandInitRange].
-	const float kRandInitRange = 0.05;
-
+  int MyRandom(int i) {
+  	static std::default_random_engine e;
+  	return e() % i;
+  }
+  // Random init params to [-kRandInitRange, kRandInitRange].
+  const float kRandInitRange = 0.05;
+  
 }   // anonymous namespace
 	
-// Constructor
-Solver::Solver(int32_t num_entity, int32_t num_cat, int32_t num_ns, 
-    int32_t num_data, Dataset* dataset, int32_t dim, int32_t mode, double rate) : num_entity_(num_entity),
-	num_category_(num_cat),
-	num_neg_sample_(num_ns),
-    num_data_(num_data),
-    dataset_(dataset),
-	dim_entity_vector_(dim),
-	distance_metric_mode_(mode),
-	learning_rate_(rate) { }
+Solver::Solver(const int num_entity, const int num_category) : 
+  num_entity_(num_entity), num_category_(num_category) {
+  // TODO initilaze from context flags
+}
 
-// Destructor
 Solver::~Solver() {
-  // clean vectors
   std::vector<Blob*>().swap(entities_);
   std::vector<Blob*>().swap(categories_);
 }
@@ -116,8 +108,7 @@ void Solver::RandInit() {
 }// rnadinit()
 
 
-float Solver::Likelihood(Blob* entity, float ***M_diag){
-
+float Solver::ComputeLikelihood(Blob* entity, float ***M_diag){
   float *v = new float[dim_entity_vector_];
   int *neg_set = new int[num_neg_sample_];
   float output_x_i = 0;
@@ -177,72 +168,52 @@ float Solver::Likelihood(Blob* entity, float ***M_diag){
   return output_x_i;
 }
 
-void Solver::Solve(){
 
-    // Likelihood
-    float p_y_101 = Likelihood(entities_[101], M_diag_);
+float Solver::ComputeDist(const int entity_from, const int entity_to, 
+    const Path* path) {
+  float* entity_from_vec = entities[entity_from]->data();
+  float* entity_to_vec = entities[entity_to]->data();
+  // xMx = sum_ij { x_i * x_j * M_ij }
+  float dist = 0;
+  if (dist_metric_mode_ == DistMetricMode::FULL) {
+     Blob* dist_metric = path->aggr_dist_metric();
+     for (int i = 0; i < dim_embedding_; ++i) {
+       for (int j = 0; j < dim_embedding_; ++j) { 
+         dist += entity_from_vec[i] * entity_to_vec[j] 
+             * dist_metric->data_at(i, j);  
+       }
+     }
+  } else if (dist_metric_mode_ == DistMetricMode::DIAG) {
+      float* dist_metric_mat = path->aggr_dist_metric()->data();
+      for (int i = 0; i < dim_embedding_; ++i) {
+        dist += entity_from_vec[i] * entity_to_vec[i] * dist_metric_mat[i];  
+      }
+  } else if (dist_metric_mode_ == DistMetricMode::EDIAG) {
+    //TODO
+  } else {
+    //TODO: report error
+  }
+  return dist;
+}
 
-   
-    // Gradient Descend
+void Solver::Solve(const vector<Datum*>& minibatch){
+  //TODO: openmp parallelize
+  for (int d = 0; d < minibatch.size(); ++d) {
+    Datum* datum = minibatch[d];
+    // Negatvie sampling
+    //TODO
+
+    // Computing Gradient
+    // e_i
+
+    // e_o  
+ 
+    // neg_samples
 
     // Update
-
-
-
-
-
-
-    /*
-    //f(eO | eI) => use for in solver or write an indep func
-
-    int o = 100;
-    //e_[i] - e_[j];
-    for (int i = 0; i < num_entity_; ++i){
-
-
-	    // v_ei - v_eo
-	    for (int k = 0; k < dim_entity_vector_; ++k){
-		    v[k] = e_[k][i] - e_[k][i];
-	    }
-
-	    // v_ei' M v_ei
-	    // f(i,o) = 1
-	    float f_io = 1;
-	    float temp = 0;
-	    for (int k = 0; k < dim_entity_vector_; ++k){
-		    temp += v[k] * f_io * v[k];
-	    }
-	    output_o_i = log(1 / (1 + exp(temp)));
-
-	    // negative sample set
-	    for (int j = 0; j < num_neg_sample_; ++j){
-		    set_neg[j] = static_cast <int> (rand()) / static_cast <int> (dim_entity_vector_);
-	    }
-
-	    // compute //remark: merge with sampling later
-	    float temp2 = 0;
-	    for (int j = 0; j < num_neg_sample_; ++j){	
-		    // compute v_
-		    for (int k = 0; k < dim_entity_vector_; ++k){
-			    v[k] = e_[k][i] - e_[k][o];
-		    }
-		    // trace M_ij
-		    // v_ei' M v_ei
-		    // f(i,o) = 1
-		    float f_io = 1;
-		    float temp3 = 0;
-		    for (int k = 0; k < dim_entity_vector_; ++k){
-			    temp3 += v[k] * f_io * v[k];
-		    }
-		    temp2 += log(1 / (1 + exp(temp3)));
-	    }
-	    output_o_i -= temp2;
-        
-    }*/
-	
-	
-	
-}// solve
+    //TODO
+  }
+}
 
 
 
