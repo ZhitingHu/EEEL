@@ -31,7 +31,11 @@ private:
   //objective func P(y|x,M)
   float ComputeLikelihood(Blob* entity, float ***M_diag);
   float ComputeDist(const int entity_from, const int entity_to, 
-      const Path* path); 
+      const Path* path);
+  // grad += coeff * { (dist_metric + dist_metric^T) 
+  //   * (entity_from_vec - entity_to_vec) } 
+  void AccumulateGradient(const float coeff, const Blob* dist_metric, 
+      const int entity_from, const int entity_to, Blob* grad);
 
 private:
   vector<Blob*> entities_;

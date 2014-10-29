@@ -18,7 +18,9 @@ public:
   const int entity_o() { return entity_o_; }
   const int count() { return count_; }
   const Path* category_path() { return category_path_; }
-
+  
+  Blob* entity_i_grad() { return entity_i_grad_; }
+  
 private: 
   /// 
   int entity_i_;
@@ -27,15 +29,15 @@ private:
   Path* category_path_;
 
   /// used in optimization 
-  Blob* entity_i_gradient_;
-  Blob* entity_o_gradient_;  
+  Blob* entity_i_grad_;
+  Blob* entity_o_grad_;  
   // negative samples 
   vector<int> neg_entity_id_;
   // paths between entity_i_ and neg_entities
   vector<Path*> entity_i_neg_paths_;
-  vector<Blob*> entity_gradient_;
+  vector<Blob*> entity_grad_;
   vector<int> category_id_;
-  vector<Blob*> category_gradient_;
+  vector<Blob*> category_grad_;
 };
 
 }  // namespace entity

@@ -196,6 +196,29 @@ float Solver::ComputeDist(const int entity_from, const int entity_to,
   return dist;
 }
 
+void Solver::AccumulateGradient(const float coeff, const Blob* dist_metric, 
+    const int entity_from, const int entity_to, Blob* grad) {
+  //TODO do some check
+  float* grad_vec = grad->mutable_data();
+  float* entity_from_vec = entities[entity_from]->data();
+  float* entity_to_vec = entities[entity_to]->data();
+  if (dist_metric_mode_ == DistMetricMode::FULL) {
+    //TODO
+
+  } else if (dist_metric_mode_ == DistMetricMode::DIAG) {
+    float* dist_metric_mat = path->aggr_dist_metric()->data();
+    for (int i = 0; i < dim_embedding_; ++i) {
+      grad_vec[i] += coeff * (2 * dist_metric_mat[i]) 
+          * (entity_from_vec[i] - entity_to_vec[i]);
+    }
+  } else if (dist_metric_mode_ == DistMetricMode::EDIAG) {
+    //TODO
+
+  } else {
+    //TODO: report error
+  }
+}
+
 void Solver::Solve(const vector<Datum*>& minibatch){
   //TODO: openmp parallelize
   for (int d = 0; d < minibatch.size(); ++d) {
@@ -205,7 +228,8 @@ void Solver::Solve(const vector<Datum*>& minibatch){
 
     // Computing Gradient
     // e_i
-
+    //float coeff = 1 - sigmod();
+    //AccumulateGradient( );
     // e_o  
  
     // neg_samples
