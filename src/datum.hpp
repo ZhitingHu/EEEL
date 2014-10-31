@@ -19,8 +19,30 @@ public:
   const int count() { return count_; }
   const Path* category_path() { return category_path_; }
   
+  /// used in optimization 
+  void AddNegSample(const int neg_entity_id, const Path* path);
+
   Blob* entity_i_grad() { return entity_i_grad_; }
-  
+  Blob* entity_o_grad() { return entity_o_grad_; }
+   
+  const int neg_entity(const int neg_idx) { return neg_entity_id[neg_idx]; }
+  const vector<Path*>& neg_category_paths() { 
+    return neg_category_paths_; 
+  } 
+  const Path* neg_category_path(const int neg_idx) { 
+    return neg_category_paths_[neg_idx]; 
+  } 
+  Blob* neg_entity_grad(const int neg_idx) { return neg_entity_grads_[neg_idx]; }
+
+  Blob* category_grad(const int category_id) {
+#ifdef DEBUG
+    CHECK(category_index_.find(category_id) != category_index_.end());
+#endif
+    return category_grads_[category_index_[category_id]]; 
+  }
+  const vector<Blob*>& category_grads() { return category_grads_; }
+  const map<int, int>& category_index() { return cateogry_index_; }
+
 private: 
   /// 
   int entity_i_;
@@ -31,13 +53,16 @@ private:
   /// used in optimization 
   Blob* entity_i_grad_;
   Blob* entity_o_grad_;  
+
   // negative samples 
   vector<int> neg_entity_id_;
   // paths between entity_i_ and neg_entities
-  vector<Path*> entity_i_neg_paths_;
-  vector<Blob*> entity_grad_;
-  vector<int> category_id_;
-  vector<Blob*> category_grad_;
+  vector<Path*> neg_category_paths_;
+  vector<Blob*> neg_entity_grads_;
+
+  // category_id => index in category_grad_
+  map<int, int> category_index_;
+  vector<Blob*> category_grads_;
 };
 
 }  // namespace entity

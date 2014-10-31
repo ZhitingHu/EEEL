@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include "fastapprox/fastsigmoid.h"
+#include "fastapprox/fastexp.h"
+#include "fastapprox/fastlog.h"
 
 namespace entity {
 
@@ -39,4 +42,4 @@ void ComputeSoftmaxDelta(const float* output_layer_units,
     int32_t num_output_units, int32_t output_label,
     float* delta_output_layer);
 
-}  // namespace dnn
+}  // namespace entity

@@ -16,24 +16,26 @@ using namespace std;
 // entity embedding parameters
 // I/O
 DEFINE_string(dataset_path, "", "data path");
-// Data
-DEFINE_int32(num_train_data, 1000, "Number of training data.");
-DEFINE_int32(num_test_data, 0, "Number of testing data.");
-// Traiing Engine Parameters
+DEFINE_string(output_file_prefix, "", "Results go here.");
+// Training Engine Parameters
 DEFINE_int32(num_epochs, 1, "Number of data sweeps.");
 DEFINE_int32(num_batches_per_eval, 10, "Number of batches per evaluation");
 DEFINE_int32(batch_size, 50, "");
-// Learning/Solver Parameters
+// Solver Parameters
 DEFINE_double(learning_rate, 0.1, "Initial step size");
 DEFINE_int32(num_neg_sample, 50, "");
 DEFINE_int32(dim_entity_vector, 100, "");
-DEFINE_int32(distance_metric_mode, 0, "");
+DEFINE_int32(distance_metric_mode, DistMetricMode::DIAG, "");
+DEFINE_int32(num_iter_on_entity, 2, "");
+DEFINE_int32(num_iter_on_category, 2, "");
 
-DEFINE_int32(num_category, 1000, "");  // to be derived from dataset
-DEFINE_int32(num_entity, 1000, "");     // tp be derived form dataset
+// Data
+// to be derived from dataset
+DEFINE_int32(num_train_data, 1000, "Number of training data.");
+DEFINE_int32(num_test_data, 0, "Number of testing data.");
+DEFINE_int32(num_category, 1000, "");  
+DEFINE_int32(num_entity, 1000, "");
 
-// Misc
-DEFINE_string(output_file_prefix, "", "Results go here.");
 
 
 int main(int argc, char *argv[]) {
