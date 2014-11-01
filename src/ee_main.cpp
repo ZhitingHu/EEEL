@@ -1,14 +1,15 @@
 // Author: Zhi-Ting Hu, Po-Yao Huang
 // Date: 2014.10.26
-#include "gflags/gflags.h"	// For VC development only
-#include "glog/logging.h"	// For VC development only
+#include "gflags/gflags.h"
+#include "glog/logging.h"
+#include "context.hpp"
+#include "ee_engine.hpp"
+
 #include <thread>
 #include <vector>
 #include <cstdint>
 #include <iostream>
 #include <numeric>	// test use only
-#include "context.hpp"
-#include "ee_engine.hpp"
 
 
 using namespace std;
@@ -24,10 +25,10 @@ DEFINE_int32(batch_size, 50, "");
 // Solver Parameters
 DEFINE_double(learning_rate, 0.1, "Initial step size");
 DEFINE_int32(num_neg_sample, 50, "");
-DEFINE_int32(dim_entity_vector, 100, "");
-DEFINE_int32(distance_metric_mode, DistMetricMode::DIAG, "");
-DEFINE_int32(num_iter_on_entity, 2, "");
-DEFINE_int32(num_iter_on_category, 2, "");
+DEFINE_int32(dim_embedding, 100, "");
+DEFINE_string(distance_metric_mode, "DIAG", "");
+DEFINE_int32(num_iter_on_entity, 1, "");
+DEFINE_int32(num_iter_on_category, 1, "");
 
 // Data
 // to be derived from dataset

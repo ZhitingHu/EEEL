@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ENTITY_DATUM_HPP_
+#define ENTITY_DATUM_HPP_
 
 #include "blob.hpp"
 #include "path.hpp"
@@ -25,7 +26,7 @@ public:
   Blob* entity_i_grad() { return entity_i_grad_; }
   Blob* entity_o_grad() { return entity_o_grad_; }
    
-  const int neg_entity(const int neg_idx) { return neg_entity_id[neg_idx]; }
+  const int neg_entity(const int neg_idx) { return neg_entity_id_[neg_idx]; }
   const vector<Path*>& neg_category_paths() { 
     return neg_category_paths_; 
   } 
@@ -41,7 +42,7 @@ public:
     return category_grads_[category_index_[category_id]]; 
   }
   const vector<Blob*>& category_grads() { return category_grads_; }
-  const map<int, int>& category_index() { return cateogry_index_; }
+  const map<int, int>& category_index() { return category_index_; }
 
 private: 
   /// 
@@ -66,3 +67,5 @@ private:
 };
 
 }  // namespace entity
+
+#endif

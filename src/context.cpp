@@ -1,9 +1,4 @@
-// Author: Dai Wei (wdai@cs.cmu.edu)
-// Date: 2013
-
 #include "context.hpp"
-#include "gflags/gflags.h"
-#include "glog/logging.h"
 #include <vector>
 #include <string>
 #pragma comment(lib,"libglog.lib")  
@@ -12,7 +7,7 @@
 
 using namespace gflags;
 
-namespace util {
+namespace entity {
 
 Context& Context::get_instance()
 {
@@ -68,4 +63,17 @@ void Context::set(std::string key, std::string value) {
   ctx_[key] = value;
 }
 
-}   // namespace util
+void Context::set_dist_metric_mode() {
+  string dist_metric_mode_str = get_string("distance_metric_mode");
+  if (dist_metric_mode_str == "FULL") {
+    dist_metric_mode_ = DistMetricMode::FULL;
+  } else if (dist_metric_mode_str == "DIAG") {
+    dist_metric_mode_ = DistMetricMode::DIAG;
+  } else if (dist_metric_mode_str == "EDIAG") {
+    dist_metric_mode_ = DistMetricMode::EDIAG;
+  } else {
+    LOG(FATAL) << "Unkown Distance_Metric_Mode";
+  }
+}
+
+}   // namespace entity 

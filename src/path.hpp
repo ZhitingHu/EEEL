@@ -1,9 +1,10 @@
-#pragma once
+#ifndef ENTITY_PATH_HPP_
+#define ENTITY_PATH_HPP_
 
 #include "common.hpp"
 #include "blob.hpp"
-#include <vector>
 
+#include <vector>
 
 namespace entity {
 
@@ -12,8 +13,8 @@ public:
   Path() {};
   ~Path() {};
   
-  const vector<int>& category_nodes() { return category_nodes_; }
-  const Blob* aggr_dist_metric() { return aggr_dist_metric_; }
+  const vector<int>& category_nodes() const { return category_nodes_; }
+  const Blob* aggr_dist_metric() const { return aggr_dist_metric_; }
   
 private: 
   vector<int> category_nodes_;
@@ -23,3 +24,5 @@ private:
 };
 
 }  // namespace entity
+
+#endif

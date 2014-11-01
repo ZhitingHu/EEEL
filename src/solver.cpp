@@ -15,19 +15,25 @@
 namespace entity {
 	
 namespace {
+  // (zhiting hu): cannot compile under -std=c++0x 
 
-  int MyRandom(int i) {
-  	static std::default_random_engine e;
-  	return e() % i;
-  }
+  //int MyRandom(int i) {
+  //	static std::default_random_engine e;
+  //	return e() % i;
+  //}
   // Random init params to [-kRandInitRange, kRandInitRange].
   const float kRandInitRange = 0.05;
   
 }   // anonymous namespace
 	
 Solver::Solver(const int num_entity, const int num_category) : 
-  num_entity_(num_entity), num_category_(num_category) {
-  // TODO initilaze from context flags
+    num_entity_(num_entity), num_category_(num_category) {
+  entity::Context& context = entity::Context::get_instance();
+  num_neg_sample_ = context.get_int32("num_neg_sample");
+  dim_embedding_ = context.get_int32("dim_embedding");
+  learning_rate_ = context.get_double("learning_rate"); //TODO adaptive lr 
+  num_iter_on_entity_ = context.get_int32("num_iter_on_entity");
+  num_iter_on_category_ = context.get_int32("num_iter_on_category");
 }
 
 Solver::~Solver() {
@@ -39,65 +45,37 @@ Solver::~Solver() {
 void Solver::RandInit() {
   std::random_device rd;
   std::mt19937 rng_engine(rd());
-  std::uniform_real_distribution<float> dis(-kRandInitRange, kRandInitRange);
+  // (zhiting hu) cannot compile under -std=c++0x
+  //std::uniform_real_distribution<float> dis(-kRandInitRange, kRandInitRange);
 
-  // memory allocation
-  std::vector<Blob*>(num_entity_, 0).swap(entities_);
-  std::vector<Blob*>(num_category_, 0).swap(categories_);
-
-  for (int i = 0; i < num_entity_; ++i)
-      entities_[i] = new Blob(dim_entity_vector_);
-
-  // Q: what's your plan to do with the Blob category? is that Mij? <= dim?
-  for (int i = 0; i < num_category_; ++i)
-      categories_[i] = new Blob(dim_entity_vector_);
-
-  // Random init ei
-  for (int i = 0; i < num_entity_; ++i)
-      for (int j = 0; j < dim_entity_vector_; ++j)
-          entities_[i]->set_data(j, static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-
-  // Random init categories
-  for (int i = 0; i < num_category_; ++i)
-      for (int j = 0; j < dim_entity_vector_; ++j)
-          categories_[i]->set_data(j, static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-
-
-  /*
-  // memory allocation
-  e_ = new float*[dim_entity_vector_];
-  for (int i = 0; i < dim_entity_vector_; ++i)
-  e_[i] = new float[num_entity_];
-
-  m_ = new float*[num_entity_];
-  for (int i = 0; i < num_entity_; ++i)
-  m_[i] = new float[num_entity_];
-
-  // random initialization
-  for (int i = 0; i < dim_entity_vector_; ++i)
-  for (int j = 0; j < num_entity_; ++j)
-  e_[i][j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-
-
-  if (distance_metric_mode_ == 0){
-  for (int i = 0; i < num_entity_; ++i)
-  for (int j = 0; j < num_entity_; ++j)
-  m_[i][j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+  for (int i = 0; i < num_entity_; ++i) {
+    entities_.push_back(new Blob(dim_embedding_));
   }
-  else{
+  for (int i = 0; i < num_category_; ++i) {
+    categories_.push_back(new Blob(dim_embedding_, dim_embedding_));
+  }
 
-  std::cout << "not handled yet!";
-  }*/
+  for (int i = 0; i < num_entity_; ++i) {
+    for (int j = 0; j < dim_embedding_; ++j) {
+      entities_[i]->mutable_data()[j] 
+          = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    }
+  }
+  for (int c_idx = 0; c_idx < num_category_; ++c_idx) {
+    for (int i = 0; i < dim_embedding_; ++i) {
+      for (int j = 0; j < dim_embedding_; ++j) {
+        categories_[c_idx]->init_data_at(
+            static_cast <float> (rand()) / static_cast <float> (RAND_MAX), i, j);
+      }
+    }
+  }
+}
 
-
-}// rnadinit()
-
-
-const float Solver::ComputeObjective(vector<Datum*> val_batch) {
+const float Solver::ComputeObjective(const vector<Datum*>& val_batch) {
   float obj = 0;
   //TODO openmp parallelize
-  for (int d = 0; d < minibatch.size(); ++d) {
-    Datum* datum = minibatch[d];
+  for (int d = 0; d < val_batch.size(); ++d) {
+    Datum* datum = val_batch[d];
 
     //TODO negative sampling
 
@@ -115,29 +93,29 @@ const float Solver::ComputeObjective(vector<Datum*> val_batch) {
 }
 
 
-float Solver::ComputeDist(const int entity_from, const int entity_to, 
+const float Solver::ComputeDist(const int entity_from, const int entity_to, 
     const Path* path) {
-  float* entity_from_vec = entities[entity_from]->data();
-  float* entity_to_vec = entities[entity_to]->data();
+  const float* entity_from_vec = entities_[entity_from]->data();
+  const float* entity_to_vec = entities_[entity_to]->data();
   // xMx = sum_ij { x_i * x_j * M_ij }
   float dist = 0;
-  if (dist_metric_mode_ == DistMetricMode::FULL) {
-     Blob* dist_metric = path->aggr_dist_metric();
+  if (entity::Context::dist_metric_mode() == entity::Context::DIAG) {
+    const float* dist_metric_mat = path->aggr_dist_metric()->data();
+    for (int i = 0; i < dim_embedding_; ++i) {
+      dist += entity_from_vec[i] * entity_to_vec[i] * dist_metric_mat[i];  
+    }
+  } else if (entity::Context::dist_metric_mode() == entity::Context::EDIAG) {
+    LOG(FATAL) << "do not support DistMetricMode::EDIAG right now.";
+  } else if (entity::Context::dist_metric_mode() == entity::Context::FULL) {
+     const Blob* dist_metric = path->aggr_dist_metric();
      for (int i = 0; i < dim_embedding_; ++i) {
        for (int j = 0; j < dim_embedding_; ++j) { 
          dist += entity_from_vec[i] * entity_to_vec[j] 
              * dist_metric->data_at(i, j);  
        }
      }
-  } else if (dist_metric_mode_ == DistMetricMode::DIAG) {
-      float* dist_metric_mat = path->aggr_dist_metric()->data();
-      for (int i = 0; i < dim_embedding_; ++i) {
-        dist += entity_from_vec[i] * entity_to_vec[i] * dist_metric_mat[i];  
-      }
-  } else if (dist_metric_mode_ == DistMetricMode::EDIAG) {
-    //TODO
   } else {
-    //TODO: report error
+    LOG(FATAL) << "Unkown Distance_Metric_Mode";
   }
   return dist;
 }
@@ -150,40 +128,39 @@ void Solver::AccumulateEntityGradient(const float coeff,
   CHECK(grad);
 #endif
   float* grad_vec = grad->mutable_data();
-  float* entity_from_vec = entities[entity_from]->data();
-  float* entity_to_vec = entities[entity_to]->data();
-  if (dist_metric_mode_ == DistMetricMode::FULL) {
-    LOG(FATAL) << "do not support DistMetricMode::FULL right now.";
-  } else if (dist_metric_mode_ == DistMetricMode::DIAG) {
-    float* dist_metric_mat = path->aggr_dist_metric()->data();
+  const float* entity_from_vec = entities_[entity_from]->data();
+  const float* entity_to_vec = entities_[entity_to]->data();
+  if (entity::Context::dist_metric_mode() == entity::Context::DIAG) {
+    const float* dist_metric_mat = dist_metric->data();
     for (int i = 0; i < dim_embedding_; ++i) {
       grad_vec[i] += coeff * (2 * dist_metric_mat[i]) 
           * (entity_from_vec[i] - entity_to_vec[i]);
     }
-  } else if (dist_metric_mode_ == DistMetricMode::EDIAG) {
+  } else if (entity::Context::dist_metric_mode() == entity::Context::EDIAG) {
     LOG(FATAL) << "do not support DistMetricMode::EDIAG right now.";
+  } else if (entity::Context::dist_metric_mode() == entity::Context::FULL) {
+    LOG(FATAL) << "do not support DistMetricMode::FULL right now.";
   } else {
-    LOG(FATAL) << "Unkown DistMetricMode";
+    LOG(FATAL) << "Unkown Distance_Metric_Mode";
   }
 }
 
 void Solver::AccumulateCategoryGradient(const float coeff, 
     const int entity_from, const int entity_to, Blob* grad) {
   float* grad_mat = grad->mutable_data();
-  float* entity_from_vec = entities[entity_from]->data();
-  float* entity_to_vec = entities[entity_to]->data();
-  if (dist_metric_mode_ == DistMetricMode::FULL) {
-    LOG(FATAL) << "do not support DistMetricMode::FULL right now.";
-  } else if (dist_metric_mode_ == DistMetricMode::DIAG) {
-    float* dist_metric_mat = path->aggr_dist_metric()->data();
+  const float* entity_from_vec = entities_[entity_from]->data();
+  const float* entity_to_vec = entities_[entity_to]->data();
+  if (entity::Context::dist_metric_mode() == entity::Context::DIAG) {
     for (int i = 0; i < dim_embedding_; ++i) {
       grad_mat[i] += coeff * (entity_from_vec[i] - entity_to_vec[i])
           * (entity_from_vec[i] - entity_to_vec[i]);;
     }
-  } else if (dist_metric_mode_ == DistMetricMode::EDIAG) {
+  } else if (entity::Context::dist_metric_mode() == entity::Context::EDIAG) {
     LOG(FATAL) << "do not support DistMetricMode::EDIAG right now.";
+  } else if (entity::Context::dist_metric_mode() == entity::Context::FULL) {
+    LOG(FATAL) << "do not support DistMetricMode::FULL right now.";
   } else {
-    LOG(FATAL) << "Unkown DistMetricMode";
+    LOG(FATAL) << "Unkown Distance_Metric_Mode";
   }
 }
 
@@ -195,14 +172,13 @@ void Solver::AddNegSample(const int neg_entity_id, const Path* path) {
   //TODO
 }
 
-
-void Solver::ComputeEntityGradient(const Datum* datum) {
+void Solver::ComputeEntityGradient(Datum* datum) {
     // on e_i
     const int entity_i = datum->entity_i();
     Blob* entity_i_grad = datum->entity_i_grad();
     float coeff = 1.0 - fastsigmoid(ComputeDist(
         entity_i, datum->entity_o(), datum->category_path()));
-    AccumulateGradient(coeff, datum->category_path()->aggr_dist_metric(), 
+    AccumulateEntityGradient(coeff, datum->category_path()->aggr_dist_metric(), 
         entity_i, datum->entity_o(), entity_i_grad);
     // on e_o  
     // = (-1) * gradient_on_e_i, so simply do the copy
@@ -213,7 +189,7 @@ void Solver::ComputeEntityGradient(const Datum* datum) {
       Blob* neg_entity_grad = datum->neg_entity_grad(neg_idx);
       coeff = 1.0 - fastsigmoid(-1.0 * ComputeDist(
           entity_i, datum->neg_entity(neg_idx), datum->category_path()));
-      AccumulateGradient(
+      AccumulateEntityGradient(
           coeff, datum->neg_category_path(neg_idx)->aggr_dist_metric(), 
           entity_i, datum->neg_entity(neg_idx), neg_entity_grad);
       // Accumulate (-1) * gradient_on_neg_samples to gradient_on_e_i 
@@ -221,7 +197,7 @@ void Solver::ComputeEntityGradient(const Datum* datum) {
     }
 }
 
-void Solver::ComputeCategoryGradient(const Datum* datum) {
+void Solver::ComputeCategoryGradient(Datum* datum) {
   // process (e_i,  e_o)
   const vector<int>& category_nodes = datum->category_path()->category_nodes();
   const int entity_i = datum->entity_i();
@@ -234,7 +210,7 @@ void Solver::ComputeCategoryGradient(const Datum* datum) {
   }
 
   // process (e_i, negative samples)
-  vector<Path*>& neg_category_paths = datum->neg_category_paths();
+  const vector<Path*>& neg_category_paths = datum->neg_category_paths();
   for (int path_idx = 0; path_idx < neg_category_paths.size(); ++path_idx) {
     const vector<int>& neg_category_nodes 
         = neg_category_paths[path_idx]->category_nodes();
@@ -259,16 +235,16 @@ void Solver::Solve(const vector<Datum*>& minibatch) {
     //TODO Negative sampling
     //SampleNegEntities(datum);
 
-    for (int iter = 0; iter < num_iter_on_entity; ++iter) {
+    for (int iter = 0; iter < num_iter_on_entity_; ++iter) {
       ComputeEntityGradient(datum);
 
       //Update Entity Vectors
-      entities[datum->entity_i()]->Accumulate(
+      entities_[datum->entity_i()]->Accumulate(
           datum->entity_i_grad(), update_coeff);
-      entities[datum->entity_o()]->Accumulate(
+      entities_[datum->entity_o()]->Accumulate(
           datum->entity_o_grad(), update_coeff);
       for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
-        entities[datum->neg_entity(neg_idx)]->Accumulate(
+        entities_[datum->neg_entity(neg_idx)]->Accumulate(
             datum->neg_entity_grad(neg_idx), update_coeff);
       }
       //TODO projection
@@ -282,14 +258,14 @@ void Solver::Solve(const vector<Datum*>& minibatch) {
     Datum* datum = minibatch[d];
     
     const map<int, int>& category_index = datum->category_index();
-    map<int, int>::iterator it = category_index.begin();
+    map<int, int>::const_iterator it = category_index.begin();
     const vector<Blob*>& category_grads = datum->category_grads();
-    for (int iter = 0; iter < num_iter_on_category; ++iter) {
+    for (int iter = 0; iter < num_iter_on_category_; ++iter) {
       ComputeCategoryGradient(datum); 
 
       //Update Category Matrics
       for (it = category_index.begin(); it != category_index.end(); ++it) {
-        categories[it->first]->Accumulate(
+        categories_[it->first]->Accumulate(
             category_grads[it->second], update_coeff);
       }
     }

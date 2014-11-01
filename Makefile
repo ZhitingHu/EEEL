@@ -7,6 +7,7 @@ EEEL_SRC = $(wildcard $(EEEL_DIR)/src/*.cpp)
 EEEL_HDR = $(wildcard $(EEEL_DIR)/src/*.hpp)
 EEEL_BIN = $(EEEL_DIR)/bin
 EEEL_OBJ = $(EEEL_SRC:.cpp=.o)
+EEEL_THIRD_PARTY = ${EEEL_DIR}/third_party
 
 CXX = g++
 CXXFLAGS = -g \
@@ -21,12 +22,14 @@ CXXFLAGS = -g \
            -std=c++0x
            #-std=c++11
 
-INCLUDE_DIRS =
-INCFLAGS =
-LDFLAGS =
+INCFLAGS = -I${EEEL_THIRD_PARTY}/include
+LDFLAGS = -L${EEEL_THIRD_PARTY}/lib \
+          -lgflags \
+          -lglog
+          
 
 # Debugging
-ifeq($(DEBUG), 1)
+ifeq ($(DEBUG), 1)
   COMMON_FLAGS += -DDEBUG
 else
   COMMON_FLAGS += -DNDEBUG
@@ -34,6 +37,7 @@ endif
 
 CXXFLAGS += $(COMMON_FLAGS)
 LDFLAGS += $(COMMON_FLAGS)
+
 
 all: $(EEEL_BIN)/eeel_main
 
