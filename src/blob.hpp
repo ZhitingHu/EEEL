@@ -13,17 +13,19 @@ namespace entity {
 class Blob {
 public:
   Blob(const int num_row, const int num_col = 1) 
-      : num_row_(num_row), num_col_(num_col), count_(num_row * num_col) { 
+      : num_row_(num_row), num_col_(num_col) { 
     if (num_col == 1 
         || entity::Context::dist_metric_mode() == entity::Context::DIAG) {
-      data_ = new float[num_row_];
+      count_ = num_row_;
     } else if (entity::Context::dist_metric_mode() == entity::Context::EDIAG) {
-      data_ = new float[1];
+      count_ = 1;
     } else if (entity::Context::dist_metric_mode() == entity::Context::FULL) {
-      data_ = new float[count_];
+      count_ = num_row_ * num_col_;
     } else {
       LOG(FATAL) << "Unknown metric mode.";
     }
+    data_ = new float[count_];
+    ClearData();
   };
 
   ~Blob() { delete data_; };
@@ -51,6 +53,10 @@ public:
     *(mutable_data() + offset(r, c)) = init_val;   
   }
   
+  inline void ClearData() {
+    memset(data_, 0, count_);
+  }
+  
   void CopyFrom(const Blob* source, const float coeff = 1.0) {
 #ifdef DEBUG
     CHECK_EQ(count_, source->count());
@@ -61,7 +67,7 @@ public:
       data_[idx] = source_data[idx] * coeff;
     }  
   }
-  void Accumulate(const Blob* source, const float coeff = 1.0){
+  void Accumulate(const Blob* source, const float coeff = 1.0) {
 #ifdef DEBUG
     CHECK_EQ(count_, source->count());
 #endif
@@ -69,6 +75,22 @@ public:
     for (int idx = 0; idx < count_; ++idx) {
       data_[idx] += source_data[idx] * coeff;
     }  
+  }
+
+  void Normalize() {
+#ifdef DEBUG
+    CHECK_EQ(num_col_, 1);
+#endif
+    float sum = 0;
+    for (int idx = 0; idx < count_; ++idx) {
+      sum += data_[idx];
+    }
+#ifdef DEBUG
+    CHECK_GT(sum, 1e-7);
+#endif
+    for (int idx = 0; idx < count_; ++idx) {
+      data_[idx] /= sum;
+    }
   }
  
 private:

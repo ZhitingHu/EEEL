@@ -22,16 +22,19 @@ public:
   // Optimizes based on minibatch
   // Assumes symmetric distance, i.e. d(e_i, e_o) = d(e_o, e_i)
   void Solve(const vector<Datum*>& minibatch);
+  
+  void Solve_single(const vector<Datum*>& minibatch);
+  void Solve_omp(const vector<Datum*>& minibatch);
 
   const float ComputeObjective(const vector<Datum*>& val_batch);
+  const float ComputeObjective_single(const vector<Datum*>& val_batch);
+  const float ComputeObjective_omp(const vector<Datum*>& val_batch);
   
   const int num_entity() { return num_entity_; }
   const int dim_embedding() { return dim_embedding_; }
   const int num_category() { return num_category_; }
 
 private:
-  void Test();   
-
   const float ComputeDist(const int entity_from, const int entity_to, 
       const Path* path);
 
@@ -61,8 +64,10 @@ private:
   int num_neg_sample_;
   int dim_embedding_;
   double learning_rate_; //TODO adaptive lr
+  int num_epoch_on_batch_;
   int num_iter_on_entity_;
   int num_iter_on_category_;
+  bool openmp_;
 };
 
 }  // namespace entity

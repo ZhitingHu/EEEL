@@ -22,6 +22,9 @@ Context::Context() {
     CommandLineFlagInfo& flag = flags[i];
     ctx_[flag.name] = flag.is_default ? flag.default_value : flag.current_value;
   }
+
+  dim_embedding_ = get_int32("dim_embedding");
+  set_dist_metric_mode();
 }
 
 // -------------------- Getters ----------------------

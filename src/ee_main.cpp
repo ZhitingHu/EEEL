@@ -19,16 +19,18 @@ using namespace std;
 DEFINE_string(dataset_path, "", "data path");
 DEFINE_string(output_file_prefix, "", "Results go here.");
 // Training Engine Parameters
-DEFINE_int32(num_epochs, 1, "Number of data sweeps.");
-DEFINE_int32(num_batches_per_eval, 10, "Number of batches per evaluation");
+DEFINE_int32(num_epoch, 1, "Number of data sweeps.");
+DEFINE_int32(num_batch_per_eval, 10, "Number of batches per evaluation");
 DEFINE_int32(batch_size, 50, "");
 // Solver Parameters
 DEFINE_double(learning_rate, 0.1, "Initial step size");
 DEFINE_int32(num_neg_sample, 50, "");
 DEFINE_int32(dim_embedding, 100, "");
 DEFINE_string(distance_metric_mode, "DIAG", "");
+DEFINE_int32(num_epoch_on_batch, 1, "Number of data sweeps on a minibatch.");
 DEFINE_int32(num_iter_on_entity, 1, "");
 DEFINE_int32(num_iter_on_category, 1, "");
+DEFINE_bool(openmp, false, "");
 
 // Data
 // to be derived from dataset

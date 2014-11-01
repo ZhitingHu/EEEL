@@ -36,9 +36,13 @@ public:
   inline static const DistMetricMode dist_metric_mode() { 
     return get_instance().dist_metric_mode_; 
   }
+  inline static const int dim_embedding() { 
+    return get_instance().dim_embedding_; 
+  }
  
 private:
   void set_dist_metric_mode();  
+
 private:
   // Private constructor. Store all the gflags values.
   Context();
@@ -47,6 +51,7 @@ private:
 
 
   DistMetricMode dist_metric_mode_;
+  int dim_embedding_;
 };
 
 } // namespace entity

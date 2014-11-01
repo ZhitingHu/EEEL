@@ -1,6 +1,6 @@
 // Date: 2014.10.26
-#include "gflags/gflags.h"	// For VC development only
-#include "glog/logging.h"	// For VC development only
+#include "gflags/gflags.h"
+#include "glog/logging.h"
 
 #include "ee_engine.hpp"
 #include "solver.hpp"
@@ -55,8 +55,8 @@ void EEEngine::ReadData() {
 
 void EEEngine::Start() {
   entity::Context& context = entity::Context::get_instance();
-  const int num_epochs = context.get_int32("num_epochs");
-  const int num_batches_per_eval = context.get_int32("num_batches_per_eval");
+  const int num_epoch = context.get_int32("num_epoch");
+  const int num_batch_per_eval = context.get_int32("num_batch_per_eval");
   int eval_counter = 0;
   int data_idx = 0;
 
@@ -66,9 +66,9 @@ void EEEngine::Start() {
   eepl_solver.RandInit();
 
   // Training	
-  for (int epoch = 0; epoch < num_epochs; ++epoch) {
+  for (int epoch = 0; epoch < num_epoch; ++epoch) {
     int num_batches_this_epoch = 0;
-    for (int batch = 0; batch < num_batches_per_eval; ++batch){
+    for (int batch = 0; batch < num_batch_per_eval; ++batch){
 	  // write our gradient descend solver
 	  //eepl_solver.SingleDataSGD(train_features_[data_idx++], learning_rate);
 

@@ -18,7 +18,7 @@ public:
   const int entity_i() { return entity_i_; }
   const int entity_o() { return entity_o_; }
   const int count() { return count_; }
-  const Path* category_path() { return category_path_; }
+  Path* category_path() { return category_path_; }
   
   /// used in optimization 
   void AddNegSample(const int neg_entity_id, const Path* path);
@@ -27,12 +27,15 @@ public:
   Blob* entity_o_grad() { return entity_o_grad_; }
    
   const int neg_entity(const int neg_idx) { return neg_entity_id_[neg_idx]; }
-  const vector<Path*>& neg_category_paths() { 
+
+  vector<Path*>& neg_category_paths() { 
     return neg_category_paths_; 
   } 
-  const Path* neg_category_path(const int neg_idx) { 
+
+  Path* neg_category_path(const int neg_idx) { 
     return neg_category_paths_[neg_idx]; 
   } 
+
   Blob* neg_entity_grad(const int neg_idx) { return neg_entity_grads_[neg_idx]; }
 
   Blob* category_grad(const int category_id) {
