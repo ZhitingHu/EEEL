@@ -21,7 +21,9 @@ public:
   Path* category_path() { return category_path_; }
   
   /// used in optimization 
-  void AddNegSample(const int neg_entity_id, const Path* path);
+  void AddNegSample(const int neg_entity_id, const Path* path) {
+    //TODO
+  }
 
   Blob* entity_i_grad() { return entity_i_grad_; }
   Blob* entity_o_grad() { return entity_o_grad_; }

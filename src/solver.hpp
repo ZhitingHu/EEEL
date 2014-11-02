@@ -50,9 +50,6 @@ private:
   void ComputeEntityGradient(Datum* datum);
   void ComputeCategoryGradient(Datum* datum);
 
-  void SampleNegEntities(const Datum* datum);
-  void AddNegSample(const int neg_entity_id, const Path* path);
-
 
 private:
   vector<Blob*> entities_;

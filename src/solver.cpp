@@ -193,13 +193,6 @@ void Solver::AccumulateCategoryGradient(const float coeff,
   }
 }
 
-void Solver::SampleNegEntities(const Datum* datum) {
-  //TODO
-}
-
-void Solver::AddNegSample(const int neg_entity_id, const Path* path) {
-  //TODO
-}
 
 void Solver::ComputeEntityGradient(Datum* datum) {
     // on e_i

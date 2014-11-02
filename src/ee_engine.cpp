@@ -53,6 +53,10 @@ void EEEngine::ReadData() {
         }*/
 }// readdata
 
+void EEEngine::SampleNegEntities(const Datum* datum) {
+  //TODO
+}
+
 void EEEngine::Start() {
   entity::Context& context = entity::Context::get_instance();
   const int num_epoch = context.get_int32("num_epoch");
@@ -69,20 +73,19 @@ void EEEngine::Start() {
   for (int epoch = 0; epoch < num_epoch; ++epoch) {
     int num_batches_this_epoch = 0;
     for (int batch = 0; batch < num_batch_per_eval; ++batch){
-	  // write our gradient descend solver
-	  //eepl_solver.SingleDataSGD(train_features_[data_idx++], learning_rate);
+      // TODO: Create Minibatch  (and negative sampling)
+      
+      //eepl_solver.Solve();
 
-	    if (1 /*workload_mgr.IsEndOfBatch()*/) {
-
-		    //eepl_solver.Solve();
-		    ++num_batches_this_epoch;
-		    /*
-		    if (num_batches_this_epoch % num_batches_per_eval == 0) {
-
-			    ++eval_counter;
-		    }*/
-	    }                   
-      }
+      if (1 /*workload_mgr.IsEndOfBatch()*/) { 
+        ++num_batches_this_epoch;
+        /*
+        if (num_batches_this_epoch % num_batches_per_eval == 0) {
+      
+                ++eval_counter;
+        }*/
+        }                   
+     }
   }
 }
 

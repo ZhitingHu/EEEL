@@ -23,7 +23,9 @@ public:
 
 private:    // private functions
 
-	private:
+  void SampleNegEntities(const Datum* datum);
+
+private:
 
   // ============== EE Variables ==================
   int32_t num_train_data_;
