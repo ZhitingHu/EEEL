@@ -3,7 +3,7 @@
 //#include <glog/logging.h>
 #include <cstdint>
 
-/*
+
 namespace entity {
 
 struct WorkloadManagerConfig {
@@ -51,7 +51,14 @@ public:
   // Get a data index and advance.
   int32_t GetDataIdxAndAdvance() {
     CHECK(!IsEnd());
-    return curr_data_idx_++;
+    //return curr_data_idx_++;
+    return curr_data_idx_;
+  }
+
+  //
+  void IncreaseDataIdxByBatchSize() {
+    CHECK(!IsEnd());
+    curr_data_idx_ += batch_size_;
   }
 
   // Get the next num_data indices without advancing.
@@ -90,4 +97,4 @@ private:
 
 }  // namespace entity
 
-*/
+

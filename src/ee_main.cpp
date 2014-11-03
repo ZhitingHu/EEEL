@@ -20,8 +20,15 @@ DEFINE_string(dataset_path, "", "data path");
 DEFINE_string(output_file_prefix, "", "Results go here.");
 // Training Engine Parameters
 DEFINE_int32(num_epoch, 1, "Number of data sweeps.");
-DEFINE_int32(num_batch_per_eval, 10, "Number of batches per evaluation");
-DEFINE_int32(batch_size, 50, "");
+DEFINE_int32(num_batch_per_eval, 1, "Number of batch per evaluation");
+DEFINE_int32(num_batch_per_epoch, 50, "Number of batch per epoch");
+DEFINE_int32(batch_size, 50, "Size of batch");
+
+DEFINE_int32(client_id, 0, "Client ID");
+DEFINE_int32(num_client, 1, "Number of client");
+DEFINE_int32(num_thread, 1, "Number of thread");
+
+
 // Solver Parameters
 DEFINE_double(learning_rate, 0.1, "Initial step size");
 DEFINE_int32(num_neg_sample, 50, "");
@@ -33,8 +40,8 @@ DEFINE_int32(num_iter_on_category, 1, "");
 DEFINE_bool(openmp, false, "");
 
 // Data
-// to be derived from dataset
-DEFINE_int32(num_train_data, 1000, "Number of training data.");
+// to be derived from dataset, to merge to read_data
+DEFINE_int32(num_train_data, 4000, "Number of training data.");
 DEFINE_int32(num_test_data, 0, "Number of testing data.");
 DEFINE_int32(num_category, 1000, "");  
 DEFINE_int32(num_entity, 1000, "");
@@ -48,13 +55,14 @@ int main(int argc, char *argv[]) {
 
 
   // read data
-  ee_engine.ReadData();
+  ee_engine.ReadData("data.txt");
   // training
   ee_engine.Start();
 
   LOG(INFO) << "Entity Embedding finished and shut down!";
-  cout << "Process done" << endl;
+  cout << "Process done" << endl; 
   system("pause");
+ 
   return 0;
 }
 

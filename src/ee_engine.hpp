@@ -17,7 +17,7 @@ public:
   EEEngine();
   ~EEEngine();
 
-  void ReadData();
+  void ReadData(const string& file_name);
 
   void Start();
 
@@ -32,6 +32,11 @@ private:
   int32_t num_test_data_;
 
   Dataset train_data_;
+  Dataset test_data_;
+
+  int32_t num_neg_sample_;
+  int32_t num_entity_;
+  
 };
 
 }  // namespace entity
