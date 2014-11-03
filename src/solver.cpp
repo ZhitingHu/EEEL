@@ -193,13 +193,12 @@ void Solver::AccumulateCategoryGradient(const float coeff,
   }
 }
 
-
 void Solver::ComputeEntityGradient(Datum* datum) {
     // on e_i
     const int entity_i = datum->entity_i();
     Blob* entity_i_grad = datum->entity_i_grad();
-    float coeff = 1.0 - fastsigmoid(ComputeDist(
-        entity_i, datum->entity_o(), datum->category_path()));
+    float coeff = fastsigmoid((-1.0) * ComputeDist(
+        entity_i, datum->entity_o(), datum->category_path())) - 1.0;
     AccumulateEntityGradient(coeff, datum->category_path()->aggr_dist_metric(), 
         entity_i, datum->entity_o(), entity_i_grad);
     // on e_o  
@@ -209,10 +208,10 @@ void Solver::ComputeEntityGradient(Datum* datum) {
     // neg_samples
     for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
       Blob* neg_entity_grad = datum->neg_entity_grad(neg_idx);
-      coeff = 1.0 - fastsigmoid(-1.0 * ComputeDist(
+      coeff = 1.0 - fastsigmoid(ComputeDist(
           entity_i, datum->neg_entity(neg_idx), datum->category_path()));
       AccumulateEntityGradient(
-          coeff, datum->neg_category_path(neg_idx)->aggr_dist_metric(), 
+          (-1.0) * coeff, datum->neg_category_path(neg_idx)->aggr_dist_metric(), 
           entity_i, datum->neg_entity(neg_idx), neg_entity_grad);
       // Accumulate (-1) * gradient_on_neg_samples to gradient_on_e_i 
       entity_i_grad->Accumulate(neg_entity_grad, -1.0);
@@ -224,8 +223,8 @@ void Solver::ComputeCategoryGradient(Datum* datum) {
   const vector<int>& category_nodes = datum->category_path()->category_nodes();
   const int entity_i = datum->entity_i();
   const int entity_o = datum->entity_o();
-  float coeff = 1.0 - fastsigmoid(ComputeDist(
-      entity_i, entity_o, datum->category_path()));
+  float coeff = fastsigmoid((-1.0) * ComputeDist(
+      entity_i, entity_o, datum->category_path())) - 1.0;
   for (int c_idx = 0; c_idx < category_nodes.size(); ++c_idx) {
     AccumulateCategoryGradient(coeff, entity_i, entity_o, 
         datum->category_grad(category_nodes[c_idx]));
@@ -237,8 +236,8 @@ void Solver::ComputeCategoryGradient(Datum* datum) {
     const vector<int>& neg_category_nodes 
         = neg_category_paths[path_idx]->category_nodes();
     const int neg_entity = datum->neg_entity(path_idx);
-    float coeff = fastsigmoid(-1.0 * ComputeDist(
-        entity_i, neg_entity, neg_category_paths[path_idx])) - 1.0;
+    float coeff = 1.0 - fastsigmoid(ComputeDist(
+        entity_i, neg_entity, neg_category_paths[path_idx]));
     for (int c_idx = 0; c_idx < neg_category_nodes.size(); ++c_idx) {
       AccumulateCategoryGradient(coeff, entity_i, neg_entity, 
           datum->category_grad(neg_category_nodes[c_idx]));
