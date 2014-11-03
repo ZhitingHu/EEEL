@@ -12,7 +12,7 @@ namespace entity {
 
 class Datum {
 public:
-  Datum() {};
+  Datum(int entity_i, int entity_o) : entity_i_(entity_i), entity_o_(entity_o){};
   ~Datum() {};
   
   const int entity_i() { return entity_i_; }
@@ -23,6 +23,8 @@ public:
   /// used in optimization 
   void AddNegSample(const int neg_entity_id, const Path* path) {
     //TODO
+    neg_entity_id_.push_back(neg_entity_id);
+    //neg_category_paths_.push_back(path);
   }
 
   Blob* entity_i_grad() { return entity_i_grad_; }
