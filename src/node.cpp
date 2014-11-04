@@ -8,7 +8,7 @@ namespace entity {
 void Node::AddParant(int p_idx) { 
 #ifdef DEBUG
   for (int i = 0; i < parent_idx_.size(); ++i) {
-    CHECK(parant_idx_[i] !=  p_idx);
+    CHECK(parent_idx_[i] !=  p_idx);
   }
 #endif
   parent_idx_.push_back(p_idx);
@@ -24,5 +24,3 @@ void Node::AddChild(int c_idx) {
 } 
 
 }  // namespace entity
-
-#endif

@@ -7,6 +7,7 @@
 #include "datum.hpp"
 #include <cstdint>
 #include <vector>
+#include <set>
 
 namespace entity {
 
@@ -54,7 +55,15 @@ private:
 private:
   vector<Blob*> entities_;
   vector<Blob*> categories_;
-
+  
+  // used in single-thread version
+  vector<Blob*> entity_grads_;
+  vector<Blob*> category_grads_;
+  set<int> updated_entities_;
+  set<int> updated_categories_;
+  set<int>::const_iterator set_it_;
+  map<int, int>::const_iterator map_it_;
+  
   int num_entity_;
   int num_category_;
 

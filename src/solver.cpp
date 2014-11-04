@@ -89,10 +89,10 @@ const float Solver::ComputeObjective_single(const vector<Datum*>& val_batch) {
 
     float datum_obj = 0;
     int entity_i = datum->entity_i();
-    datum_obj += log(fastsigmoid(ComputeDist(
+    datum_obj += log((-1.0) * fastsigmoid(ComputeDist(
         entity_i, datum->entity_o(), datum->category_path())));
     for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
-      datum_obj += log(fastsigmoid((-1.0) * ComputeDist(
+      datum_obj += log(fastsigmoid(ComputeDist(
           entity_i, datum->neg_entity(neg_idx), datum->category_path())));
     }
     obj += datum_obj;
@@ -111,10 +111,10 @@ const float Solver::ComputeObjective_omp(const vector<Datum*>& val_batch) {
 
     float datum_obj = 0;
     int entity_i = datum->entity_i();
-    datum_obj += log(fastsigmoid(ComputeDist(
+    datum_obj += log(fastsigmoid((-1.0) * ComputeDist(
         entity_i, datum->entity_o(), datum->category_path())));
     for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
-      datum_obj += log(fastsigmoid((-1.0) * ComputeDist(
+      datum_obj += log(fastsigmoid(ComputeDist(
           entity_i, datum->neg_entity(neg_idx), datum->category_path())));
     }
     obj += datum_obj;
@@ -252,63 +252,102 @@ void Solver::Solve(const vector<Datum*>& minibatch) {
     Solve_single(minibatch);
   }
 }
-
+// Note: _single has different pipeline with _omp
+//
 void Solver::Solve_single(const vector<Datum*>& minibatch) {
 #ifdef DEBUG
   CHECK(minibatch.size() != 0);
 #endif
   float update_coeff = (-1.0) * learning_rate_ / minibatch.size();
   for (int epoch = 0; epoch < num_epoch_on_batch_; ++epoch) {
-    // Optimize entity embedding
+    // TODO: negative sampling here ?
+    
+    // Refresh path aggregated distance metric
     for (int d = 0; d < minibatch.size(); ++d) {
-      Datum* datum = minibatch[d];
-      //TODO Negative sampling
-      //SampleNegEntities(datum);
-
-      for (int iter = 0; iter < num_iter_on_entity_; ++iter) {
+      minibatch[d]->category_path()->RefreshAggrDistMetric(categories_);
+      vector<Path*> neg_category_paths = minibatch[d]->neg_category_paths();
+      for (int p_idx = 0; p_idx < neg_category_paths.size(); ++p_idx) {
+        neg_category_paths[p_idx]->RefreshAggrDistMetric(categories_);
+      }
+    }
+    // Optimize entity embedding
+    for (int iter = 0; iter < num_iter_on_entity_; ++iter) {
+      for (int d = 0; d < minibatch.size(); ++d) {
+        Datum* datum = minibatch[d];
         ComputeEntityGradient(datum);
 
-        //Update Entity Vectors
-        entities_[datum->entity_i()]->Accumulate(
-            datum->entity_i_grad(), update_coeff);
-        entities_[datum->entity_o()]->Accumulate(
-            datum->entity_o_grad(), update_coeff);
-        for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
-          entities_[datum->neg_entity(neg_idx)]->Accumulate(
-              datum->neg_entity_grad(neg_idx), update_coeff);
+        // Accumulate entity gradients
+#ifdef DEBUG
+        CHECK_GT(entity_grads_.size(), 0);
+#endif        
+        entity_grads_[datum->entity_i()]->Accumulate(
+            datum->entity_i_grad(), 1.0);
+        entity_grads_[datum->entity_o()]->Accumulate(
+            datum->entity_o_grad(), 1.0);
+        if (epoch == 0 && iter == 0) {
+          updated_entities_.insert(datum->entity_i());
+          updated_entities_.insert(datum->entity_o());
         }
-        //Projection
-        entities_[datum->entity_i()]->Normalize();
-        entities_[datum->entity_o()]->Normalize();
         for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
-          entities_[datum->neg_entity(neg_idx)]->Normalize();
+          entity_grads_[datum->neg_entity(neg_idx)]->Accumulate(
+              datum->neg_entity_grad(neg_idx), 1.0);
+          if (epoch == 0 && iter == 0) {
+            updated_entities_.insert(datum->neg_entity(neg_idx));
+          }
         }
+      } // end of minibatch
+
+      // Update entity vectors
+      set_it_ = updated_entities_.begin();
+      for (; set_it_ != updated_entities_.end(); ++set_it_) { 
+        entities_[*set_it_]->Accumulate(entity_grads_[*set_it_], update_coeff);
+        // Projection
+        entities_[*set_it_]->Normalize();
+        // clear gradidents
+        entity_grads_[*set_it_]->ClearData();
       }
-    }
+    } // end of optimizing entity embedding
+
     // Optimize category embedding
-    for (int d = 0; d < minibatch.size(); ++d) {
-      Datum* datum = minibatch[d];
-      
-      const map<int, int>& category_index = datum->category_index();
-      map<int, int>::const_iterator it = category_index.begin();
-      const vector<Blob*>& category_grads = datum->category_grads();
-      for (int iter = 0; iter < num_iter_on_category_; ++iter) {
+    for (int iter = 0; iter < num_iter_on_category_; ++iter) {
+      for (int d = 0; d < minibatch.size(); ++d) {
+        Datum* datum = minibatch[d];
+
+        if (iter > 0) {
+          // Refresh path aggregated distance metric
+          datum->category_path()->RefreshAggrDistMetric(categories_);
+          vector<Path*> neg_category_paths = datum->neg_category_paths();
+          for (int p_idx = 0; p_idx < neg_category_paths.size(); ++p_idx) {
+            neg_category_paths[p_idx]->RefreshAggrDistMetric(categories_);
+          }
+        }
+
         ComputeCategoryGradient(datum); 
 
-        //Update Category Matrics
-        for (it = category_index.begin(); it != category_index.end(); ++it) {
-          categories_[it->first]->Accumulate(
-              category_grads[it->second], update_coeff);
+        // Accumulate category gradients
+#ifdef DEBUG
+        CHECK_GT(category_grads_.size(), 0);
+#endif        
+        const vector<Blob*>& datum_category_grads = datum->category_grads();
+        map_it_ = datum->category_index().begin();
+        for (; map_it_ != datum->category_index().end(); ++map_it_) {
+          category_grads_[map_it_->first]->Accumulate(
+              datum_category_grads[map_it_->second], 1.0);
+          if (epoch == 0 && iter == 0) {
+            updated_categories_.insert(datum->entity_i());
+          }
         }
-        // Refresh path aggregated distance metric
-        datum->category_path()->RefreshAggrDistMetric(categories_);
-        vector<Path*> neg_category_paths = datum->neg_category_paths();
-        for (int p_idx = 0; p_idx < neg_category_paths.size(); ++p_idx) {
-          neg_category_paths[p_idx]->RefreshAggrDistMetric(categories_);
-        } 
+      } // end of minibatch
+
+      //Update Category Matrics
+      set_it_ = updated_categories_.begin();
+      for (; set_it_ != updated_categories_.end(); ++set_it_) { 
+        categories_[*set_it_]->Accumulate(category_grads_[*set_it_], update_coeff);
+        // clear gradients
+        category_grads_[*set_it_]->ClearData();
       }
-    }
-  }// end of epoches
+    } // end of optimizing category embedding 
+  } // end of epoches
 }
 
 void Solver::Solve_omp(const vector<Datum*>& minibatch) {

@@ -5,6 +5,7 @@
 #include "node.hpp"
 #include <vector>
 #include <map>
+#include <set>
 #include <cstdint>
 #include <utility>
 
@@ -18,9 +19,13 @@ public:
   Path* FindPathBetweenEntities(int entity_from, int entity_to);
     
 private:
-  // @return: an sorted array of ancestor nodes
-  //     sorted according to node level
-  const vector<Node*>& FindCommonAncestors(int entity_from, int entity_to);
+  void FindCommonAncestors(int entity_from, int entity_to,
+      set<int>& common_ancestors);
+
+  //void FindCommonAncestors(const int entity_from, const int entity_to,
+  //    map<int, int>& entity_from_ancestor_weights, 
+  //    map<int, int>& entity_to_ancestor_weights,
+  //    set<int>& common_ancestors);
 
 private:
   // [0, num_entity): entity nodes
@@ -28,10 +33,17 @@ private:
   // Note: entity_id = index in nodes_;
   //       category_id = index in nodes_ - num_entity
   vector<Node*> nodes_;
+ 
+  // dim = num_entity
+  // Each entry map<int, float> is ancestor_category_id => weight
+  vector<map<int, float> > entity_ancestor_weights_;
 
   int num_entity_;
   int num_category_;
   int max_node_level_;
+
+  set<int>::const_iterator set_it_;
+  map<int, float>::const_iterator map_cit_;
 };
 
 }  // namespace entity

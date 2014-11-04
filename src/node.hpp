@@ -19,8 +19,8 @@ public:
   
   inline const vector<int>& parent_idx() { return parent_idx_; }
   inline const vector<int>& child_idx() { return child_idx_; }
-  inline const int id() { return id_; }
-  inline const int level() { return level_; }
+  inline const int id() const { return id_; }
+  inline const int level() const { return level_; }
   
   bool operator<(const Node& node) {
     return level_ < node.level();
