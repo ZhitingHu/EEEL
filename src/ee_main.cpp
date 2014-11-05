@@ -15,9 +15,8 @@
 using namespace std;
 
 // entity embedding parameters
-// I/O
-DEFINE_string(dataset_path, "", "data path");
-DEFINE_string(output_file_prefix, "", "Results go here.");
+
+
 // Training Engine Parameters
 DEFINE_int32(num_epoch, 1, "Number of data sweeps.");
 DEFINE_int32(num_batch_per_eval, 1, "Number of batch per evaluation");
@@ -41,10 +40,21 @@ DEFINE_bool(openmp, false, "");
 
 // Data
 // to be derived from dataset, to merge to read_data
-DEFINE_int32(num_train_data, 4000, "Number of training data.");
+// I/O
+DEFINE_string(dataset_path, "tech/", "data path");
+DEFINE_string(output_file_prefix, "./", "Results go here.");
+DEFINE_string(category_filename, "categories.txt", "category filename");
+DEFINE_string(entity_filename, "entity.txt", "entity filename");
+DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.txt", "entity-ancestor filename");
+DEFINE_string(entity_to_category_filename, "entity2category.txt", "entity-category filename");
+DEFINE_string(hierarchy_filename, "hierarchy.txt", "hierarchy filename");
+DEFINE_string(hierarchy_id_filename, "hierarchy_id.txt", "hierarchy id filename");
+DEFINE_string(pair_filename, "pair.txt", "pair id filename");
+
+//DEFINE_int32(num_entity, 1000, "");
+//DEFINE_int32(num_train_data, 4000, "Number of training data.");
 DEFINE_int32(num_test_data, 0, "Number of testing data.");
-DEFINE_int32(num_category, 1000, "");  
-DEFINE_int32(num_entity, 1000, "");
+//DEFINE_int32(num_category, 1000, "");  
 
 
 

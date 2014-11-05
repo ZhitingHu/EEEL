@@ -10,9 +10,10 @@ namespace entity {
 
 class Node {
 public:
-  Node(const int id, const int level): id_(id), level_(level) {};
+  Node(const int id, const int level) : id_(id), level_(level) {};
   ~Node() {};
   
+  void set_level(const int level){ level_ = level; };
   void AddParant(int p_idx);
   
   void AddChild(int c_idx);

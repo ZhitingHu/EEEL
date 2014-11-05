@@ -6,9 +6,13 @@
 #include "common.hpp"
 #include "dataset.hpp"
 #include "context.hpp"
+#include "node.hpp"
+#include "hierarchy.hpp"
 #include <vector>
 #include <cstdint>
 #include <utility>
+#include <iostream>
+#include <fstream>
 
 namespace entity {
 
@@ -34,8 +38,11 @@ private:
   Dataset train_data_;
   Dataset test_data_;
 
+  Hierarchy entuty_category_hierarchy_;
+
   int32_t num_neg_sample_;
   int32_t num_entity_;
+  int32_t num_category_;
   
 };
 

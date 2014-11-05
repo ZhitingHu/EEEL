@@ -12,20 +12,37 @@ namespace entity {
 
 class Datum {
 public:
-  Datum(int entity_i, int entity_o) : entity_i_(entity_i), entity_o_(entity_o){};
-  ~Datum() {};
+  Datum(int entity_i, int entity_o, int count) : entity_i_(entity_i), entity_o_(entity_o), count_(count){};
+  ~Datum() {
+  // TODO
+  // init ...
+  };
   
   const int entity_i() { return entity_i_; }
   const int entity_o() { return entity_o_; }
   const int count() { return count_; }
   Path* category_path() { return category_path_; }
   
+
+  void clear_negs(){
+    vector<int>().swap(neg_entity_id_);
+    vector<Path*>().swap(neg_category_paths_);
+    vector<Blob*>().swap(neg_entity_grads_);
+    vector<Blob*>().swap(category_grads_);
+    category_index_.clear();
+  }
+
   /// used in optimization 
-  void AddNegSample(const int neg_entity_id, const Path* path) {
-    //TODO
+  void AddNegSample(int neg_entity_id, Path* path) {
+    
     neg_entity_id_.push_back(neg_entity_id);
-    //neg_category_paths_.push_back(path);
+    neg_category_paths_.push_back(path);
     // Note(hzt): also update category_index_ and categroy_grads_
+    
+    //TODO
+    //vector<Blob*> neg_entity_grads_;
+    //map<int, int> category_index_;
+    //vector<Blob*> category_grads_;
   }
 
   Blob* entity_i_grad() { return entity_i_grad_; }

@@ -17,7 +17,27 @@ public:
   ~Hierarchy() {};
  
   Path* FindPathBetweenEntities(int entity_from, int entity_to);
-    
+ 
+  void Init_Hierarchy(int size){
+    Node *Node_ptr; //= static_cast<Node*>(::operator new (sizeof(Node)*size));
+    //vector<Node*> 
+    for (int Node_idx = 0; Node_idx < size; ++Node_idx){
+      Node_ptr = new Node(Node_idx, -1);  // init levels of entities to -1 
+      nodes_.push_back(Node_ptr);
+    }
+  };
+  
+  void Set_Node_level(int id, int level){
+    nodes_[id]->set_level(level);
+  };
+
+  Node* Get_Node_adr(int idx) const { return (Node*) nodes_[idx]; }
+
+
+  void Add_weights(map<int, float> map_weight){
+    entity_ancestor_weights_.push_back(map_weight);
+  }
+
 private:
   void FindCommonAncestors(int entity_from, int entity_to,
       set<int>& common_ancestors);
