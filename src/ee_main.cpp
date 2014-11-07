@@ -50,6 +50,7 @@ DEFINE_string(entity_to_category_filename, "entity2category.txt", "entity-catego
 DEFINE_string(hierarchy_filename, "hierarchy.txt", "hierarchy filename");
 DEFINE_string(hierarchy_id_filename, "hierarchy_id.txt", "hierarchy id filename");
 DEFINE_string(pair_filename, "pair.txt", "pair id filename");
+DEFINE_string(level_filename, "level.txt", "category level filename");
 
 //DEFINE_int32(num_entity, 1000, "");
 //DEFINE_int32(num_train_data, 4000, "Number of training data.");
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]) {
   // read data
   ee_engine.ReadData("data.txt");
   // training
-  ee_engine.Start();
+  //ee_engine.Start();
 
   LOG(INFO) << "Entity Embedding finished and shut down!";
   cout << "Process done" << endl; 

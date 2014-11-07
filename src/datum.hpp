@@ -12,11 +12,12 @@ namespace entity {
 
 class Datum {
 public:
-  Datum(int entity_i, int entity_o, int count) : entity_i_(entity_i), entity_o_(entity_o), count_(count){};
-  ~Datum() {
-  // TODO
-  // init ...
-  };
+  Datum(int entity_i, int entity_o, int count) : 
+    entity_i_(entity_i), entity_o_(entity_o), count_(count){
+    // TODO
+    // init ...
+   };
+  ~Datum() {};
   
   const int entity_i() { return entity_i_; }
   const int entity_o() { return entity_o_; }
@@ -40,7 +41,7 @@ public:
     // Note(hzt): also update category_index_ and categroy_grads_
     
     //TODO
-    //vector<Blob*> neg_entity_grads_;
+    //ector<Blob*>().swap(neg_entity_grads_);
     //map<int, int> category_index_;
     //vector<Blob*> category_grads_;
   }

@@ -34,7 +34,7 @@ public:
   Node* Get_Node_adr(int idx) const { return (Node*) nodes_[idx]; }
 
 
-  void Add_weights(map<int, float> map_weight){
+  void Add_weights(map<int, float>* map_weight){
     entity_ancestor_weights_.push_back(map_weight);
   }
 
@@ -56,7 +56,7 @@ private:
  
   // dim = num_entity
   // Each entry map<int, float> is ancestor_category_id => weight
-  vector<map<int, float> > entity_ancestor_weights_;
+  vector< map<int, float>* > entity_ancestor_weights_;
 
   int num_entity_;
   int num_category_;
