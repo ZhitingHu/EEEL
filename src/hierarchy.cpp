@@ -15,9 +15,9 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 #endif
   Path* path = new Path();
   const map<int, float>& entity_from_ancestor_weights 
-      = entity_ancestor_weights_[entity_from]; 
+      = *entity_ancestor_weights_[entity_from]; 
   const map<int, float>& entity_to_ancestor_weights 
-      = entity_ancestor_weights_[entity_to]; 
+      = *entity_ancestor_weights_[entity_to]; 
   queue<int> unprocessed_nodes;
   set<int> processed_nodes;
   // expand from common ancestors
@@ -76,16 +76,16 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 void Hierarchy::FindCommonAncestors(int entity_from, int entity_to,
     set<int>& common_ancestors) {
   // for speedup
-  if (entity_ancestor_weights_[entity_from].size() 
-      < entity_ancestor_weights_[entity_to].size()) {
+  if (entity_ancestor_weights_[entity_from]->size() 
+      < entity_ancestor_weights_[entity_to]->size()) {
     int tmp = entity_to;
     entity_to = entity_from;
     entity_from = tmp;
   }
   const map<int, float>& entity_from_ancestor_weights 
-      = entity_ancestor_weights_[entity_from]; 
+      = *entity_ancestor_weights_[entity_from]; 
   const map<int, float>& entity_to_ancestor_weights 
-      = entity_ancestor_weights_[entity_to]; 
+      = *entity_ancestor_weights_[entity_to]; 
   /// get common ancestors 
   int cur_ancestor_idx;
   int c_idx_i;

@@ -65,6 +65,7 @@ void EEEngine::ReadData(const string& file_name) {
   string hierarchy_filename           = context.get_string("hierarchy_filename");
   string hierarchy_id_filename        = context.get_string("hierarchy_id_filename");
   string pair_filename                = context.get_string("pair_filename");
+  string level_filename               = context.get_string("level_filename");
   
   // file streams
   ifstream category_file(dataset_path + category_filename);
@@ -74,6 +75,7 @@ void EEEngine::ReadData(const string& file_name) {
   ifstream hierarchy_file(dataset_path + hierarchy_filename);
   ifstream hierarchy_id_file(dataset_path + hierarchy_id_filename);
   ifstream pair_file(dataset_path + pair_filename);
+  ifstream level_file(dataset_path + level_filename);
 
   if (!category_file.is_open())
     cout << "fail to open:" << dataset_path + category_filename << "\n";
@@ -89,6 +91,8 @@ void EEEngine::ReadData(const string& file_name) {
     cout << "fail to open:" << dataset_path + hierarchy_id_filename << "\n";
   if (!pair_file.is_open())
     cout << "fail to open:" << dataset_path + pair_filename << "\n";
+  if (!level_file.is_open())
+    cout << "fail to open:" << dataset_path + level_filename << "\n";
 
   // 1. Parse Category File
   while (getline(category_file, line)){
@@ -143,31 +147,44 @@ void EEEngine::ReadData(const string& file_name) {
     }
   }
   
-  
+  while (getline(level_file, line)){
+    istringstream iss(line);
+    vector<int> tokens{ istream_iterator<int>{iss}, istream_iterator<int>{} };
+    Node *temp_category_node = entuty_category_hierarchy_.Get_Node_adr(tokens[0] + num_entity_);
+    temp_category_node->set_level(tokens[1]);
+  }
+
   // 5. Parse Entity-Ancestor File
   while (getline(entity_ancestor_file, line)){
+    
     istringstream iss(line);
     vector<string> tokens{ istream_iterator<string>{iss}, istream_iterator<string>{} };
     //743:8.3
     // current entity
     Node *temp_entity_node = entuty_category_hierarchy_.Get_Node_adr(stoi(tokens[0]));
 
+    map<int, float>* temp_map;
     // add Entity Ancestor 
     for (int level = 1; level < tokens.size(); ++level){
       vector<string> temp_string = split(tokens[level], ':');
-      map<int, float> temp_map;
+      temp_map = new map < int, float >;
+      //new map<int, float> temp_map;
       
-      temp_map.insert(pair<int, float>(stoi(temp_string[0]), stof(temp_string[1])));
+      temp_map->insert(pair<int, float>(stoi(temp_string[0]), stof(temp_string[1])));
       //cout << stoi(temp_string[0]) << "\t" << stof(temp_string[1]) << endl;
+      
+      // this step is extremely slow, it takes ~5min to store these maps 
+      // modify to vector<*map> instead of vector<map>
       entuty_category_hierarchy_.Add_weights(temp_map);
     }
   }
-
+  
   // 6. Parse pair File
   // Remark: current memory allocation is not good, consider allocate once than assign in future version.
   while (getline(pair_file, line)){
     istringstream iss(line);
     vector<int> tokens{ istream_iterator<int>{iss},istream_iterator<int>{}};
+
     train_data_.Add_Datum(tokens[0], tokens[1], tokens[2]);
 
     // Add path to pairs
@@ -180,7 +197,6 @@ void EEEngine::ReadData(const string& file_name) {
   }
   cout << "number of training data: " << num_train_data_ << endl;
 
-
   // close files
   category_file.close();
   entity_file.close();
@@ -189,7 +205,7 @@ void EEEngine::ReadData(const string& file_name) {
   hierarchy_file.close();
   hierarchy_id_file.close();
   pair_file.close();
-
+  level_file.close();
 }// readdata
 
 void EEEngine::SampleNegEntities(const Datum* datum) {
