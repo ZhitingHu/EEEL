@@ -38,7 +38,7 @@ private:
   Dataset train_data_;
   Dataset test_data_;
 
-  Hierarchy entuty_category_hierarchy_;
+  Hierarchy entity_category_hierarchy_;
 
   int32_t num_neg_sample_;
   int32_t num_entity_;

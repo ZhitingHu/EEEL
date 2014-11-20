@@ -15,7 +15,8 @@
 using namespace std;
 
 // entity embedding parameters
-
+DEFINE_int32(dim_embedding, 100, "");
+DEFINE_string(distance_metric_mode, "DIAG", "");
 
 // Training Engine Parameters
 DEFINE_int32(num_epoch, 1, "Number of data sweeps.");
@@ -23,16 +24,14 @@ DEFINE_int32(num_batch_per_eval, 1, "Number of batch per evaluation");
 DEFINE_int32(num_batch_per_epoch, 50, "Number of batch per epoch");
 DEFINE_int32(batch_size, 50, "Size of batch");
 
+// Parameter Server (not used)
 DEFINE_int32(client_id, 0, "Client ID");
 DEFINE_int32(num_client, 1, "Number of client");
 DEFINE_int32(num_thread, 1, "Number of thread");
 
-
 // Solver Parameters
 DEFINE_double(learning_rate, 0.1, "Initial step size");
 DEFINE_int32(num_neg_sample, 50, "");
-DEFINE_int32(dim_embedding, 100, "");
-DEFINE_string(distance_metric_mode, "DIAG", "");
 DEFINE_int32(num_epoch_on_batch, 1, "Number of data sweeps on a minibatch.");
 DEFINE_int32(num_iter_on_entity, 1, "");
 DEFINE_int32(num_iter_on_category, 1, "");
@@ -41,8 +40,8 @@ DEFINE_bool(openmp, false, "");
 // Data
 // to be derived from dataset, to merge to read_data
 // I/O
-DEFINE_string(dataset_path, "tech/", "data path");
-DEFINE_string(output_file_prefix, "./", "Results go here.");
+DEFINE_string(dataset_path, "data/tech/", "data path");
+DEFINE_string(output_file_prefix, "output/", "Results go here.");
 DEFINE_string(category_filename, "categories.txt", "category filename");
 DEFINE_string(entity_filename, "entity.txt", "entity filename");
 DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.txt", "entity-ancestor filename");
@@ -56,7 +55,6 @@ DEFINE_string(level_filename, "level.txt", "category level filename");
 //DEFINE_int32(num_train_data, 4000, "Number of training data.");
 DEFINE_int32(num_test_data, 0, "Number of testing data.");
 //DEFINE_int32(num_category, 1000, "");  
-
 
 
 int main(int argc, char *argv[]) {

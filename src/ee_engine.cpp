@@ -1,16 +1,15 @@
 // Date: 2014.10.26
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-
 #include "ee_engine.hpp"
 #include "solver.hpp"
 #include "workload_manager.hpp"
-
-
 #include "util.hpp"
 #include "string_util.hpp"
+
 #include <string>
 #include <fstream>
+#include <iterator>
 #include <vector>
 #include <cstdint>
 
@@ -43,8 +42,8 @@ EEEngine::EEEngine(){
 EEEngine::~EEEngine() {
         //std::vector<Datum*>().swap(train_data_);
     train_data_.~Dataset();
-        num_train_data_ = 0;
-        num_test_data_ = 0;
+    num_train_data_ = 0;
+    num_test_data_ = 0;
 }// destructor
 
 // Read and parse data
@@ -68,14 +67,14 @@ void EEEngine::ReadData(const string& file_name) {
   string level_filename               = context.get_string("level_filename");
   
   // file streams
-  ifstream category_file(dataset_path + category_filename);
-  ifstream entity_file(dataset_path + entity_filename);
-  ifstream entity_ancestor_file(dataset_path + entity_to_ancestor_filename);
-  ifstream entity_category_file(dataset_path + entity_to_category_filename);
-  ifstream hierarchy_file(dataset_path + hierarchy_filename);
-  ifstream hierarchy_id_file(dataset_path + hierarchy_id_filename);
-  ifstream pair_file(dataset_path + pair_filename);
-  ifstream level_file(dataset_path + level_filename);
+  ifstream category_file(dataset_path + "/" + category_filename);
+  ifstream entity_file(dataset_path + "/" + entity_filename);
+  ifstream entity_ancestor_file(dataset_path + "/" + entity_to_ancestor_filename);
+  ifstream entity_category_file(dataset_path + "/" + entity_to_category_filename);
+  ifstream hierarchy_file(dataset_path + "/" + hierarchy_filename);
+  ifstream hierarchy_id_file(dataset_path + "/" + hierarchy_id_filename);
+  ifstream pair_file(dataset_path + "/" + pair_filename);
+  ifstream level_file(dataset_path + "/" + level_filename);
 
   if (!category_file.is_open())
     cout << "fail to open:" << dataset_path + category_filename << "\n";
@@ -106,9 +105,8 @@ void EEEngine::ReadData(const string& file_name) {
   }
   cout << "number of entity: " << num_entity_ << endl;
 
-
   // init category hierarchy
-  entuty_category_hierarchy_.Init_Hierarchy(num_category + num_entity_);
+  entity_category_hierarchy_.Init_Hierarchy(num_category + num_entity_);
 
   // entity_id = index in nodes_;
   // category_id = index in nodes_ - num_entity
@@ -116,10 +114,11 @@ void EEEngine::ReadData(const string& file_name) {
   // 3. Parse entity file
   while (getline(entity_category_file, line)){
     istringstream iss(line);
-    vector<int> tokens{ istream_iterator<int>{iss}, istream_iterator<int>{} };
+    vector<int> tokens{ 
+        std::istream_iterator<int>{iss}, std::istream_iterator<int>{}};
     
     // current entity
-    Node *temp_entity_node = entuty_category_hierarchy_.Get_Node_adr(tokens[0]);
+    Node *temp_entity_node = entity_category_hierarchy_.Get_Node_adr(tokens[0]);
 
     // add parents categories to current entity
     for (int level = 1; level < tokens.size(); ++level)
@@ -132,7 +131,7 @@ void EEEngine::ReadData(const string& file_name) {
     vector<int> tokens{ istream_iterator<int>{iss}, istream_iterator<int>{}};
 
     for (int level = 0; level < tokens.size(); ++level){
-      Node *temp_category_node = entuty_category_hierarchy_.Get_Node_adr(tokens[level] + num_entity_);
+      Node *temp_category_node = entity_category_hierarchy_.Get_Node_adr(tokens[level] + num_entity_);
 
       // set node/level
       //temp_category_node->set_Node(tokens[level], level);
@@ -150,7 +149,7 @@ void EEEngine::ReadData(const string& file_name) {
   while (getline(level_file, line)){
     istringstream iss(line);
     vector<int> tokens{ istream_iterator<int>{iss}, istream_iterator<int>{} };
-    Node *temp_category_node = entuty_category_hierarchy_.Get_Node_adr(tokens[0] + num_entity_);
+    Node *temp_category_node = entity_category_hierarchy_.Get_Node_adr(tokens[0] + num_entity_);
     temp_category_node->set_level(tokens[1]);
   }
 
@@ -161,7 +160,7 @@ void EEEngine::ReadData(const string& file_name) {
     vector<string> tokens{ istream_iterator<string>{iss}, istream_iterator<string>{} };
     //743:8.3
     // current entity
-    Node *temp_entity_node = entuty_category_hierarchy_.Get_Node_adr(stoi(tokens[0]));
+    Node *temp_entity_node = entity_category_hierarchy_.Get_Node_adr(stoi(tokens[0]));
 
     map<int, float>* temp_map;
     // add Entity Ancestor 
@@ -175,7 +174,7 @@ void EEEngine::ReadData(const string& file_name) {
       
       // this step is extremely slow, it takes ~5min to store these maps 
       // modify to vector<*map> instead of vector<map>
-      entuty_category_hierarchy_.Add_weights(temp_map);
+      entity_category_hierarchy_.Add_weights(temp_map);
     }
   }
   
@@ -188,7 +187,7 @@ void EEEngine::ReadData(const string& file_name) {
     train_data_.Add_Datum(tokens[0], tokens[1], tokens[2]);
 
     // Add path to pairs
-    Path* entity_pair_path = entuty_category_hierarchy_.FindPathBetweenEntities(tokens[0], tokens[1]);
+    Path* entity_pair_path = entity_category_hierarchy_.FindPathBetweenEntities(tokens[0], tokens[1]);
     train_data_.Add_Path(num_train_data_, tokens[1], entity_pair_path);
     
     num_train_data_++;
@@ -206,21 +205,15 @@ void EEEngine::ReadData(const string& file_name) {
   hierarchy_id_file.close();
   pair_file.close();
   level_file.close();
-}// readdata
+}
 
 void EEEngine::SampleNegEntities(const Datum* datum) {
   // merged in Start()
 }
 
 void EEEngine::Start() {
-
-  //petuum::PSTableGroup::RegisterThread();
-
-  // Initialize local thread data structures.
-  //int thread_id = thread_counter_++;
   int thread_id = 0;
 
-  // Get flags
   entity::Context& context = entity::Context::get_instance();
   const int client_id = context.get_int32("client_id");
   const int num_client = context.get_int32("num_client");
@@ -235,11 +228,11 @@ void EEEngine::Start() {
   int data_idx = 0;
 
   // EEPL solver initialization
-  Solver eepl_solver(context.get_int32("num_entity"),
-    context.get_int32("num_category"));
+  Solver eeel_solver(context.get_int32("num_entity"),
+      context.get_int32("num_category"));
 
   if (client_id == 0 && thread_id == 0) {
-    eepl_solver.RandInit();
+    eeel_solver.RandInit();
   }
 
   // Workload Manager configuration
@@ -258,58 +251,63 @@ void EEEngine::Start() {
     workload_mgr.Restart();
     while (!workload_mgr.IsEnd()) {
       int32_t data_idx = workload_mgr.GetDataIdxAndAdvance();
-      cout << data_idx << endl;
 
       // Create Minibatch 
       // Note: Consider remove minibatch and directly pass Dataset and an anchor
       vector<Datum*> minibatch;
-      for (int minibatch_idx = 0; minibatch_idx < workload_mgr.GetBatchSize(); ++minibatch_idx){
+      for (int minibatch_idx = 0; minibatch_idx < workload_mgr.GetBatchSize(); 
+          ++minibatch_idx) {
         
         // Extract Datum from Dataset and to minibatch  
         minibatch.push_back(train_data_.Get_Datum_adr(data_idx + minibatch_idx));
         int32_t entity_id = minibatch[minibatch_idx]->entity_i();
 
         // Negative Sampling
-        for (int neg_sample_idx = 0; neg_sample_idx < num_neg_sample_; neg_sample_idx++){
-          int32_t neg_entity_id = static_cast <int> (rand()) % static_cast <int> (num_entity_);
+        for (int neg_sample_idx = 0; neg_sample_idx < num_neg_sample_; 
+            ++neg_sample_idx) {
+          int32_t neg_entity_id 
+             = static_cast <int> (rand()) % static_cast <int> (num_entity_);
 
           //TODO: consider handle duplicated case
-          while (neg_entity_id == entity_id)
-            neg_entity_id = static_cast <int> (rand()) % static_cast <int> (num_entity_);
-          //cout << neg_entity_id << " ";
+          while (neg_entity_id == entity_id) {
+            neg_entity_id 
+                = static_cast <int> (rand()) % static_cast <int> (num_entity_);
+          }
 
           // Generate Path between entity_i and neg_sample
-          Path *neg_entity_path;
-          neg_entity_path = entuty_category_hierarchy_.FindPathBetweenEntities(entity_id, neg_entity_id);
+          Path* neg_entity_path
+              = entity_category_hierarchy_.FindPathBetweenEntities(
+              entity_id, neg_entity_id);
 
           minibatch[minibatch_idx]->AddNegSample(neg_entity_id, neg_entity_path);
         }
-      }// minibatch
+      }
       
-      //eepl_solver.Solve(minibatch);
+      //eeel_solver.Solve(minibatch);
       
       // Clear neg samples and related grads
-      for (int minibatch_idx = 0; minibatch_idx < workload_mgr.GetBatchSize(); ++minibatch_idx){
-        
-        // add Datum to minibatch from Dataset 
+      for (int minibatch_idx = 0; minibatch_idx < workload_mgr.GetBatchSize(); 
+          ++minibatch_idx){
         Datum* Datum_to_clear = train_data_.Get_Datum_adr(data_idx + minibatch_idx);
         Datum_to_clear->clear_negs();
       }
 
       workload_mgr.IncreaseDataIdxByBatchSize();
-      // end of batch handle
+      
       if (workload_mgr.IsEndOfBatch()){
         ++num_batch_this_epoch;
         if (num_batch_this_epoch % num_batch_per_eval == 0) {
           //std::vector<int32_t> eval_data_idx = workload_mgr.GetBatchDataIdx(44);
           ++eval_counter;
           if (client_id == 0 && thread_id == 0) {
+            //TODO
           }
         }
       }// end of batch
-    } // is end workload manager
-  } // epoch
-  
+      break; //TODO: just for debug
+    } // end of an epoch
+    break; //TODO: just for debug
+  } // end of training
 }
 
 }  // namespace entity
