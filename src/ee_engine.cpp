@@ -228,8 +228,7 @@ void EEEngine::Start() {
   int data_idx = 0;
 
   // EEPL solver initialization
-  Solver eeel_solver(context.get_int32("num_entity"),
-      context.get_int32("num_category"));
+  Solver eeel_solver(num_entity_, num_category_);
 
   if (client_id == 0 && thread_id == 0) {
     eeel_solver.RandInit();
