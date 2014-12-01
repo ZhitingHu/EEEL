@@ -18,24 +18,25 @@ public:
  
   Path* FindPathBetweenEntities(int entity_from, int entity_to);
  
-  void Init_Hierarchy(int size){
-    Node *Node_ptr; //= static_cast<Node*>(::operator new (sizeof(Node)*size));
+  void InitHierarchy(int num_entity, int num_category){
+    Node *node; //= static_cast<Node*>(::operator new (sizeof(Node)*size));
     //vector<Node*> 
-    for (int Node_idx = 0; Node_idx < size; ++Node_idx){
-      Node_ptr = new Node(Node_idx, -1);  // init levels of entities to -1 
-      nodes_.push_back(Node_ptr);
+    for (int nidx = 0; nidx < num_entity + num_category; ++nidx){
+      node = new Node(nidx, -1);  // init levels of entities to -1 
+      nodes_.push_back(node);
     }
+    entity_ancestor_weights_.resize(num_entity);
   };
   
   void Set_Node_level(int id, int level){
     nodes_[id]->set_level(level);
   };
 
-  Node* Get_Node_adr(int idx) const { return (Node*) nodes_[idx]; }
+  Node* node(int idx) { return nodes_[idx]; }
 
 
-  void Add_weights(map<int, float>* map_weight){
-    entity_ancestor_weights_.push_back(map_weight);
+  void AddAncestorWeights(int entity_id, map<int, float>* ancestor_weight_map) {
+    entity_ancestor_weights_[entity_id] = ancestor_weight_map;
   }
 
 private:

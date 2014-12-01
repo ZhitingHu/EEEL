@@ -11,6 +11,22 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
   FindCommonAncestors(entity_from, entity_to, common_ancestors); 
   int num_ca = common_ancestors.size();
 #ifdef DEBUG
+  if (num_ca <= 0) {
+    const map<int, float>& entity_from_ancestor_weights 
+        = *entity_ancestor_weights_[entity_from]; 
+    const map<int, float>& entity_to_ancestor_weights 
+        = *entity_ancestor_weights_[entity_to];
+    LOG(INFO) << "ENTITY FROM " << entity_from;
+    map<int, float>::const_iterator it = entity_from_ancestor_weights.begin();    
+    for (; it != entity_from_ancestor_weights.end(); ++it) {
+      LOG(INFO) << it->first;
+    }
+    LOG(INFO) << "ENTITY TO " << entity_to;
+    it = entity_to_ancestor_weights.begin();    
+    for (; it != entity_to_ancestor_weights.end(); ++it) {
+      LOG(INFO) << it->first;
+    }
+  }
   CHECK_GT(num_ca, 0);
 #endif
   Path* path = new Path();
@@ -94,27 +110,27 @@ void Hierarchy::FindCommonAncestors(int entity_from, int entity_to,
     cur_ancestor_idx = map_cit_->first;
     // common ancestor: have disjoint paths to entity_from and entity_to
     if (entity_from_ancestor_weights.find(cur_ancestor_idx) 
-        != entity_from_ancestor_weights.end() &&
-        common_ancestors.find(cur_ancestor_idx) // make sure no duplicate
+        != entity_from_ancestor_weights.end() && // an ancestor of entity_from
+        common_ancestors.find(cur_ancestor_idx)  // make sure no duplicate
         == common_ancestors.end()) {
       const vector<int>& cur_ancestor_children 
           = nodes_[cur_ancestor_idx]->child_idx();
       // three features of children nodes
-      bool has_ancestor_of_from = false;
+      //bool has_ancestor_of_from = false;
       int num_ancestor_of_from_or_to = 0;
       bool has_nonca_or_in_ca_set = false; 
       for (c_idx_i = 0; c_idx_i < cur_ancestor_children.size(); ++c_idx_i) {
         int c_idx = cur_ancestor_children[c_idx_i];
-        if (entity_from_ancestor_weights.find(c_idx) 
+        if (c_idx == entity_from || entity_from_ancestor_weights.find(c_idx) 
             != entity_from_ancestor_weights.end()) {
-          has_ancestor_of_from = true;
+          //has_ancestor_of_from = true;
           ++num_ancestor_of_from_or_to;
           if (entity_to_ancestor_weights.find(c_idx) 
               == entity_to_ancestor_weights.end()) {
             has_nonca_or_in_ca_set = true;
           }
         }
-        if (entity_to_ancestor_weights.find(c_idx) 
+        if (c_idx == entity_to || entity_to_ancestor_weights.find(c_idx) 
             != entity_to_ancestor_weights.end()) {
           ++num_ancestor_of_from_or_to;
           if (entity_from_ancestor_weights.find(c_idx) 
@@ -126,7 +142,7 @@ void Hierarchy::FindCommonAncestors(int entity_from, int entity_to,
           has_nonca_or_in_ca_set = true;
         } 
         // check if conditions are satisfied 
-        if (has_ancestor_of_from && has_nonca_or_in_ca_set 
+        if (/*has_ancestor_of_from &&*/ has_nonca_or_in_ca_set 
             && num_ancestor_of_from_or_to > 1) {
           common_ancestors.insert(cur_ancestor_idx);
           break;

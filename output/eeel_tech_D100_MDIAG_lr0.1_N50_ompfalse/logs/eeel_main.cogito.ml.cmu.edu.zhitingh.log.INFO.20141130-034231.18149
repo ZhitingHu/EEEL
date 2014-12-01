@@ -1,0 +1,4 @@
+Log file created at: 2014/11/30 03:42:31
+Running on machine: cogito.ml.cmu.edu
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1130 03:42:31.187772 18149 ee_main.cpp:71] Entity Embedding finished and shut down!

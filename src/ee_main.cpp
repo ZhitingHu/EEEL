@@ -21,7 +21,7 @@ DEFINE_string(distance_metric_mode, "DIAG", "");
 // Training Engine Parameters
 DEFINE_int32(num_epoch, 1, "Number of data sweeps.");
 DEFINE_int32(num_batch_per_eval, 1, "Number of batch per evaluation");
-DEFINE_int32(num_batch_per_epoch, 50, "Number of batch per epoch");
+//DEFINE_int32(num_batch_per_epoch, 50, "Number of batch per epoch");
 DEFINE_int32(batch_size, 50, "Size of batch");
 
 // Parameter Server (not used)
@@ -69,8 +69,8 @@ int main(int argc, char *argv[]) {
   ee_engine.Start();
 
   LOG(INFO) << "Entity Embedding finished and shut down!";
-  cout << "Process done" << endl; 
-  system("pause");
+  cout << "Process Done." << endl; 
+  //system("pause");
  
   return 0;
 }

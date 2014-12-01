@@ -11,7 +11,8 @@ struct WorkloadManagerConfig {
   int32_t client_id;
   int32_t num_clients;
   int32_t num_threads;
-  int32_t num_batches_per_epoch;
+  //int32_t num_batches_per_epoch;
+  int32_t batch_size;
   int32_t num_data;
 };
 
@@ -35,7 +36,8 @@ public:
     } else {
       data_idx_end_ = data_idx_begin_ + num_data_per_thread;
     }
-    batch_size_ = (data_idx_end_ - data_idx_begin_) / num_batches_per_epoch;
+    //batch_size_ = (data_idx_end_ - data_idx_begin_) / num_batches_per_epoch;
+    batch_size_ = config.batch_size;
     CHECK_GT(batch_size_, 0);
     Restart();
   }
@@ -44,19 +46,22 @@ public:
     return batch_size_;
   }
 
-  void Restart() {
+  void inline Restart() {
     curr_data_idx_ = data_idx_begin_;
   }
 
   // Get a data index and advance.
-  int32_t GetDataIdxAndAdvance() {
-    CHECK(!IsEnd());
-    //return curr_data_idx_++;
-    return curr_data_idx_;
+  int32_t inline GetDataIdxAndAdvance() {
+    int ret = curr_data_idx_;
+    ++curr_data_idx_;
+    if (IsEnd()) {
+      Restart();
+    }
+    return ret;
   }
 
   //
-  void IncreaseDataIdxByBatchSize() {
+  void inline IncreaseDataIdxByBatchSize() {
     CHECK(!IsEnd());
     curr_data_idx_ += batch_size_;
   }
@@ -76,11 +81,11 @@ public:
   }
 
   // Is end of the data set (of this partition).
-  bool IsEnd() {
+  bool inline IsEnd() {
     return curr_data_idx_ == data_idx_end_;
   }
 
-  bool IsEndOfBatch() const {
+  bool inline IsEndOfBatch() const {
     return (curr_data_idx_ - data_idx_begin_) % batch_size_ == 0;
   }
 

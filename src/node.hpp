@@ -14,7 +14,7 @@ public:
   ~Node() {};
   
   void set_level(const int level){ level_ = level; };
-  void AddParant(int p_idx);
+  void AddParent(int p_idx);
   
   void AddChild(int c_idx);
   

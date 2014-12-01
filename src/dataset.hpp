@@ -17,33 +17,34 @@ public:
   //void ReadData(const string& file_name);
 
   // Add new Datum to dataset
-  void Add_Datum(int entity_1_id, int entity_2_id, int count){
-    Datum new_Datum(entity_1_id, entity_2_id, count);  //make sure constuctor
-    data.push_back(new_Datum);
+  void AddDatum(int entity_i, int entity_o, int count){
+    Datum new_datum(entity_i, entity_o, count);  //make sure constuctor
+    data.push_back(new_datum);
   }
 
-  // Read Datum from dataset
-  Datum* Get_Datum_adr(int idx) const { return (Datum*) &data[idx]; }
-
+  Datum* datum(int idx) const { return &(data_[idx]); }
+ 
+  const map<int, map<int, Path*> >& entity_pair_path() { 
+    return entity_pair_path_; 
+  }
+ 
   // Add path to dataset
-  void Add_Path(int idx, int entity_2_id, Path* entity_pair_path){
-    map<int, Path> temp_map; 
-    temp_map[entity_2_id] = *entity_pair_path;
-    entity_pair_path_[idx] = temp_map;
-    //entity_pair_path_.insert(temp_map);
-    /*
-    map<int, map<int, Path> > entity_pair_path_;
-    if (entity_pair_path_.find(i) == entity_pair_path_.end()) {
-      entity_pair_path_[i] = map;
+  void AddPath(const int entity_i, const int entity_o, Path* path){
+    //map<int, Path> temp_map; 
+    //temp_map[entity_2_id] = *entity_pair_path;
+    //entity_pair_path_[idx] = temp_map;
+    if (entity_pair_path_.find(entity_i) == entity_pair_path_.end()) {
+      map<int, Path*> entity_o_path_map;
+      entity_o_path_map[entity_o] = path;
+      entity_pair_path_[entity_i] = entity_o_path_map;
     } else {
-      entity_pair_path_[i][o] = path;
+      entity_pair_path_[entity_i][entity_o] = path;
     }
-    */
   }
 
   // move to ee_engine for simplicity
   // for negative sampling  
-  //const bool Cooccur(int entity_1_id, int entity_2_id){
+  //inline bool Cooccur(int entity_1_id, int entity_2_id){
   //  int32_t neg_entity_id = static_cast <int> (rand()) % static_cast <int> (num_entity_);
   //  return neg_entity_id == entity_1_id;
   //}
@@ -56,10 +57,12 @@ public:
   //};
 
 private: 
-  vector<Datum> data;
+  vector<Datum> data_;
 
   // entity_1_d => (entitiy_2_id => path)
-  map<int, map<int, Path> > entity_pair_path_;
+  map<int, map<int, Path*> > entity_pair_path_;
+
+  // TODO what's this for? @hzt
   map<int, int> ee;
 };
 
