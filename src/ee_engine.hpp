@@ -21,29 +21,31 @@ public:
   EEEngine();
   ~EEEngine();
 
-  void ReadData(const string& file_name);
+  void ReadData();
 
   void Start();
+ 
+  // for analysis
+  Hierarchy* entity_category_hierarchy() { 
+    return &entity_category_hierarchy_; 
+  }
 
 private:    // private functions
 
-  void SampleNegEntities(const Datum* datum);
+  void SampleNegEntities(Datum* datum);
 
 private:
 
   // ============== EE Variables ==================
-  int32_t num_train_data_;
-  int32_t num_test_data_;
-
   Dataset train_data_;
-  Dataset test_data_;
+  //Dataset test_data_;
+  int num_train_data_;  
 
   Hierarchy entity_category_hierarchy_;
 
   int32_t num_neg_sample_;
   int32_t num_entity_;
   int32_t num_category_;
-  
 };
 
 }  // namespace entity

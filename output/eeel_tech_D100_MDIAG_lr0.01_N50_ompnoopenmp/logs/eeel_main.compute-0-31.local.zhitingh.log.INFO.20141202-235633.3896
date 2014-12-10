@@ -1,0 +1,13 @@
+Log file created at: 2014/12/02 23:56:33
+Running on machine: compute-0-31.local
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1202 23:56:33.711256  3896 ee_engine.cpp:99] number of category: 1169
+E1202 23:58:06.711458  3896 ee_engine.cpp:334] 1,-3121.83
+E1202 23:58:14.425932  3896 ee_engine.cpp:334] 2,-3639.07
+E1202 23:58:22.927173  3896 ee_engine.cpp:334] 3,-3747.95
+E1202 23:58:30.519307  3896 ee_engine.cpp:334] 4,-3097.62
+E1202 23:58:40.661303  3896 ee_engine.cpp:334] 5,-3975.82
+E1202 23:58:50.360641  3896 ee_engine.cpp:334] 6,-3052.82
+E1202 23:58:57.740039  3896 ee_engine.cpp:334] 7,-2202.28
+E1202 23:59:05.410542  3896 ee_engine.cpp:334] 8,-2565.45
+E1202 23:59:11.992884  3896 ee_engine.cpp:334] 9,-2449.11

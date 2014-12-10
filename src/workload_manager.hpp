@@ -23,7 +23,7 @@ public:
     int32_t client_id = config.client_id;
     int32_t num_clients = config.num_clients;
     int32_t num_threads = config.num_threads;
-    int32_t num_batches_per_epoch = config.num_batches_per_epoch;
+    //int32_t num_batches_per_epoch = config.num_batches_per_epoch;
 
     // Each thread handles data [data_idx_begin_, data_idx_end_).
     int num_data = config.num_data;
@@ -52,6 +52,9 @@ public:
 
   // Get a data index and advance.
   int32_t inline GetDataIdxAndAdvance() {
+#ifdef DEBUG
+    CHECK(!IsEnd());
+#endif
     int ret = curr_data_idx_;
     ++curr_data_idx_;
     if (IsEnd()) {
@@ -62,22 +65,26 @@ public:
 
   //
   void inline IncreaseDataIdxByBatchSize() {
+#ifdef DEBUG
     CHECK(!IsEnd());
+#endif
     curr_data_idx_ += batch_size_;
+    if (curr_data_idx_ >= data_idx_end_) {
+      curr_data_idx_ = (curr_data_idx_ - data_idx_end_)
+        % (data_idx_end_ - data_idx_begin_) + data_idx_begin_;
+    }
   }
 
   // Get the next num_data indices without advancing.
-  std::vector<int32_t> GetBatchDataIdx(int32_t num_data) const {
-    std::vector<int32_t> result(num_data);
+  void GetBatchDataIdx(const int num_data, vector<int>& batch_data_idx) const {
     for (int i = 0; i < num_data; ++i) {
-      result[i] = (curr_data_idx_ + i);
+      batch_data_idx[i] = curr_data_idx_ + i;
       // Wrap around to be within [data_idx_begin_, data_idx_end_)
-      if (result[i] >= data_idx_end_) {
-        result[i] = (result[i] - data_idx_end_)
+      if (batch_data_idx[i] >= data_idx_end_) {
+        batch_data_idx[i] = (batch_data_idx[i] - data_idx_end_)
           % (data_idx_end_ - data_idx_begin_) + data_idx_begin_;
       }
     }
-    return result;
   }
 
   // Is end of the data set (of this partition).

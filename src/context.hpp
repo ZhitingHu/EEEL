@@ -32,6 +32,17 @@ public:
     EDIAG, // diagonal matirx with tied diagonal elements
     FULL // full PSD matrix
   };
+  enum Phase {
+    TRAIN,
+    ANALYZE
+  };
+
+  inline static const Phase phase() { 
+    return get_instance().phase_; 
+  }
+  inline static void set_phase(Phase phase) { 
+    get_instance().phase_ = phase; 
+  }
 
   inline static const DistMetricMode dist_metric_mode() { 
     return get_instance().dist_metric_mode_; 
@@ -49,7 +60,7 @@ private:
   // Underlying data structure
   std::unordered_map<std::string, std::string> ctx_;
 
-
+  Phase phase_;
   DistMetricMode dist_metric_mode_;
   int dim_embedding_;
 };

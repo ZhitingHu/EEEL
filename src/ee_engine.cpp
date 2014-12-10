@@ -23,31 +23,20 @@ namespace {
 }  // anonymous namespace
 
   // Constructor
-EEEngine::EEEngine(){
+EEEngine::EEEngine() {
   entity::Context& context = entity::Context::get_instance();
-  //std::string meta_file = context.get_string("dataset_path") + ".meta";
-  //std::ifstream is(meta_file.c_str());
-
-  // parameter initialization
   
-  num_test_data_ = context.get_int32("num_test_data");
   num_neg_sample_ = context.get_int32("num_neg_sample");
   
-  num_train_data_ = 0; //context.get_int32("num_train_data");
-  num_entity_ = 0; //context.get_int32("num_entity");
+  num_train_data_ = 0;
+  num_entity_ = 0;
   num_category_ = 0;
-}// constructor
+}
 
-// Destructor
-EEEngine::~EEEngine() {
-        //std::vector<Datum*>().swap(train_data_);
-    train_data_.~Dataset();
-    num_train_data_ = 0;
-    num_test_data_ = 0;
-}// destructor
+EEEngine::~EEEngine() { }
 
 // Read and parse data
-void EEEngine::ReadData(const string& file_name) {
+void EEEngine::ReadData() {
   string line;
   int counter;
 
@@ -96,6 +85,7 @@ void EEEngine::ReadData(const string& file_name) {
     num_category_++;
   }
   cout << "number of category: " << num_category_ << endl;
+  LOG(INFO) << "number of category: " << num_category_;
  
   // 2. Parse Entity File
   while (getline(entity_file, line)){
@@ -110,7 +100,7 @@ void EEEngine::ReadData(const string& file_name) {
   // category_id = index in nodes_ - num_entity
 
   // 3. Parse entity file
-  while (getline(entity_category_file, line)){
+  while (getline(entity_category_file, line)) {
     istringstream iss(line);
     vector<int> tokens{ 
         std::istream_iterator<int>{iss}, std::istream_iterator<int>{}};
@@ -145,23 +135,6 @@ void EEEngine::ReadData(const string& file_name) {
       entity_category_hierarchy_.node(child_category_idx)->
           AddParent(category_idx);
     }
-    //for (int level = 0; level < tokens.size(); ++level){
-    //  Node *category_node 
-    //      = entity_category_hierarchy_.node(tokens[level] + num_entity_);
-
-    //  // set node/level
-    //  //temp_category_node->set_Node(tokens[level], level);
-
-    //  // add child categories to current category
-    //  if (level + 1 < tokens.size()) {
-    //    category_node->AddChild(tokens[level + 1] + num_entity_);
-    //  }
-
-    //  // add parent categories to current category
-    //  if (level > 0) {
-    //    category_node->AddParent(tokens[level - 1] + num_entity_);
-    //  }
-    //}
   }
  
   // category levels 
@@ -177,7 +150,7 @@ void EEEngine::ReadData(const string& file_name) {
   int num_entity_ancetor_file_line = 0;
   while (getline(entity_ancestor_file, line)){
     istringstream iss(line);
-    vector<string> tokens{ istream_iterator<string>{iss}, istream_iterator<string>{} };
+    vector<string> tokens{istream_iterator<string>{iss}, istream_iterator<string>{}};
     //743:8.3
     // entity_idx in heirarchy= entity_id
     const int entity_idx = stoi(tokens[0]);
@@ -194,18 +167,6 @@ void EEEngine::ReadData(const string& file_name) {
     }
 
     ++num_entity_ancetor_file_line;
-
-    //map<int, float>* ancestor_weight_map;
-    //// add Entity Ancestor 
-    //for (int level = 1; level < tokens.size(); ++level){
-    //  vector<string> temp_string = split(tokens[level], ':');
-    //  ancestor_weight_map = new map<int, float>;
-    //  ancestor_weight_map->insert(pair<int, float>(stoi(temp_string[0]), stof(temp_string[1])));
-    //  
-    //  // this step is extremely slow, it takes ~5min to store these maps 
-    //  // modify to vector<*map> instead of vector<map>
-    //  entity_category_hierarchy_.Add_weights(temp_map);
-    //}
   }
 #ifdef DEBUG
   CHECK_EQ(num_entity_ancetor_file_line, num_entity_);
@@ -222,13 +183,10 @@ void EEEngine::ReadData(const string& file_name) {
     const int entity_i = tokens[0];
     const int entity_o = tokens[1];
     const int count = tokens[2];
-    train_data_.AddDatum(entity_i, entity_o, count);
-
-    // Add path to pairs
     Path* entity_pair_path 
         = entity_category_hierarchy_.FindPathBetweenEntities(
         entity_i, entity_o);
-    train_data_.AddPath(entity_i, entity_o, entity_pair_path);
+    train_data_.AddDatum(entity_i, entity_o, count, entity_pair_path);
     
     num_train_data_++;
     //Datum *temp = train_data_.datum(num_train_data_ - 1);
@@ -247,24 +205,24 @@ void EEEngine::ReadData(const string& file_name) {
   level_file.close();
 }
 
-void EEEngine::SampleNegEntities(const Datum* datum) {
+void EEEngine::SampleNegEntities(Datum* datum) {
   const int entity_i = datum->entity_i();
   const map<int, Path*>& pos_entities 
-      = train_data_.entity_pair_path()[entity_i];
+      = train_data_.positive_entity_path(entity_i);
 
   for (int neg_sample_idx = 0; neg_sample_idx < num_neg_sample_; 
-      ++neg_sample_idx) 
+      ++neg_sample_idx) { 
     // TODO use sophisiticated distribution
     int neg_entity = rand() % num_entity_;
     while (neg_entity == entity_i || 
         pos_entities.find(neg_entity) != pos_entities.end()) {
-      neg_entity_id = rand() % num_entity_;
+      neg_entity = rand() % num_entity_;
     }
     // Generate path between entity_i and neg_sample
     Path* neg_path = entity_category_hierarchy_.FindPathBetweenEntities(
         entity_i, neg_entity);
 
-    datum->AddNegSample(neg_entity, neg_path);
+    datum->AddNegSample(neg_sample_idx, neg_entity, neg_path);
   }
 }
 
@@ -275,21 +233,19 @@ void EEEngine::Start() {
   const int client_id = context.get_int32("client_id");
   const int num_client = context.get_int32("num_client");
   const int num_thread = context.get_int32("num_thread");
-  const int num_epoch = context.get_int32("num_epoch");
+  const int num_iter = context.get_int32("num_iter");
   const int batch_size = context.get_int32("batch_size");
-  const int num_batch_per_eval = context.get_int32("num_batch_per_eval");
-  const int num_batch_per_epoch = context.get_int32("num_batch_per_epoch");
+  const int num_iter_per_eval = context.get_int32("num_iter_per_eval");
+  const int snapshot = context.get_int32("snapshot");
   const float learning_rate = context.get_double("learning_rate");
+  const string& output_file_prefix = context.get_string("output_file_prefix"); 
 
   int eval_counter = 0;
   int data_idx = 0;
 
-  // EEPL solver initialization
+  // EEEL solver initialization
   Solver eeel_solver(num_entity_, num_category_);
-
-  if (client_id == 0 && thread_id == 0) {
-    eeel_solver.RandInit();
-  }
+  eeel_solver.RandInit();
 
   // Workload Manager configuration
   WorkloadManagerConfig workload_mgr_config;
@@ -297,19 +253,19 @@ void EEEngine::Start() {
   workload_mgr_config.client_id = client_id;
   workload_mgr_config.num_clients = num_client;
   workload_mgr_config.num_threads = num_thread;
-  //workload_mgr_config.num_batches_per_epoch = num_batch_per_epoch;
   workload_mgr_config.batch_size = batch_size;
   workload_mgr_config.num_data = num_train_data_;
   WorkloadManager workload_mgr(workload_mgr_config);
 
-  // Training	
-  //for (int epoch = 0; epoch < num_epoch; ++epoch) {
   vector<Datum*> minibatch(workload_mgr.GetBatchSize());
-  for (int iter = 0; iter < num_iter; ++iter) {
+  vector<int> test_minibatch_data_idx(kNumDataEval);
+  vector<Datum*> test_minibatch(kNumDataEval);
+  // Training	
+  for (int iter = 1; iter <= num_iter; ++iter) {
     // Create Minibatch 
     for (int d_idx = 0; d_idx < workload_mgr.GetBatchSize(); ++d_idx) {
-      int32_t data_idx = workload_mgr.GetDataIdxAndAdvance();
-      Datum* datum = train_data_.datum(data_idx + minibatch_idx);
+      int data_idx = workload_mgr.GetDataIdxAndAdvance();
+      Datum* datum = train_data_.datum(data_idx);
       SampleNegEntities(datum);
 
       minibatch[d_idx] = datum;
@@ -319,26 +275,39 @@ void EEEngine::Start() {
     
     // Clear neg samples and related grads
     for (int d_idx = 0; d_idx < workload_mgr.GetBatchSize(); ++d_idx){
-      // @hzt ??
-      //Datum* Datum_to_clear = train_data_.datum(data_idx + minibatch_idx);
-      //Datum_to_clear->clear_negs();
-      minibatch[d_idx]->clear_negs();
+      minibatch[d_idx]->ClearNegSamples();
     }
 
     workload_mgr.IncreaseDataIdxByBatchSize();
     
-    if (workload_mgr.IsEndOfBatch()){
-      ++num_batch_this_epoch;
-      if (num_batch_this_epoch % num_batch_per_eval == 0) {
-        //std::vector<int32_t> eval_data_idx = workload_mgr.GetBatchDataIdx(44);
-        ++eval_counter;
-        if (client_id == 0 && thread_id == 0) {
-          //TODO
-        }
+    if (iter % num_iter_per_eval == 0) {
+      ++eval_counter;
+      // Create test batch
+      workload_mgr.GetBatchDataIdx(kNumDataEval, test_minibatch_data_idx); 
+      for (int d_idx = 0; d_idx < kNumDataEval; ++d_idx) {
+        Datum* datum = train_data_.datum(test_minibatch_data_idx[d_idx]);
+        SampleNegEntities(datum);
+
+        test_minibatch[d_idx] = datum;
       }
-    }// end of batch
-    break; //TODO: just for debug
+      float obj = eeel_solver.ComputeObjective(test_minibatch);
+      LOG(ERROR) << iter << "," << obj;
+      cout << "iter=" << iter << ",obj=" << obj << endl;
+
+      // Clear neg samples and related grads
+      for (int d_idx = 0; d_idx < kNumDataEval; ++d_idx){
+        test_minibatch[d_idx]->ClearNegSamples();
+      }
+    }
+    
+    if (iter % snapshot == 0) {
+      eeel_solver.Snapshot(output_file_prefix, iter);
+    }
   } // end of training
+  
+  if (num_iter % snapshot != 0) {
+    eeel_solver.Snapshot(output_file_prefix, num_iter);
+  }
 }
 
 }  // namespace entity

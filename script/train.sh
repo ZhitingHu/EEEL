@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Figure out the paths.
 script_path=`readlink -f $0`
@@ -9,26 +9,27 @@ prog_path=${app_dir}/bin/${progname}
 
 # Data
 dataset_name=tech
+#dataset_name=apple
 dataset_path="${app_dir}/data/${dataset_name}"
 
 ## Parameters
 # embedding
-dim_embedding=100;
+dim_embedding=50;
 distance_metric_mode="DIAG";
 
 # training engine parameters
-num_epoch=1
-num_batch_per_eval=1
-num_batch_per_epoch=50
+num_iter=1000
+num_iter_per_eval=1
 batch_size=50
 
 # solver parameters
-learning_rate=0.1
+learning_rate=0.001
 num_neg_sample=50
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-openmp=false
+snapshot=200
+openmp=noopenmp
 
 # Output
 output_dir=${app_dir}/output
@@ -42,7 +43,7 @@ mkdir -p ${log_dir}
 # Run
 echo Running eeel_main
 
-GLOG_logtostderr=false \
+GLOG_logtostderr=0 \
 GLOG_stderrthreshold=0 \
 GLOG_log_dir=$log_dir \
 GLOG_v=-1 \
@@ -51,15 +52,14 @@ GLOG_vmodule="" \
     $prog_path \
     --dim_embedding $dim_embedding \
     --distance_metric_mode $distance_metric_mode \
-    --num_epoch $num_epoch \
-    --num_batch_per_eval $num_batch_per_eval \
-    --num_batch_per_epoch $num_batch_per_epoch \
+    --num_iter $num_iter \
+    --num_iter_per_eval $num_iter_per_eval \
     --batch_size $batch_size \
     --learning_rate $learning_rate \
     --num_neg_sample $num_neg_sample \
     --num_epoch_on_batch $num_epoch_on_batch \
     --num_iter_on_entity $num_iter_on_entity \
     --num_iter_on_category $num_iter_on_category \
-    --openmp $openmp \
+    --${openmp} \
     --dataset_path $dataset_path \
     --output_file_prefix $output_dir

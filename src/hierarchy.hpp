@@ -19,18 +19,23 @@ public:
   Path* FindPathBetweenEntities(int entity_from, int entity_to);
  
   void InitHierarchy(int num_entity, int num_category){
-    Node *node; //= static_cast<Node*>(::operator new (sizeof(Node)*size));
-    //vector<Node*> 
-    for (int nidx = 0; nidx < num_entity + num_category; ++nidx){
+    Node *node; 
+    // entity node
+    for (int nidx = 0; nidx < num_entity; ++nidx){
       node = new Node(nidx, -1);  // init levels of entities to -1 
+      nodes_.push_back(node);
+    }
+    // category node
+    for (int nidx = 0; nidx < num_category; ++nidx){
+      node = new Node(nidx, -1);
       nodes_.push_back(node);
     }
     entity_ancestor_weights_.resize(num_entity);
   };
   
-  void Set_Node_level(int id, int level){
-    nodes_[id]->set_level(level);
-  };
+  //void SetNodeLevel(int idx, int level){
+  //  nodes_[idx]->set_level(level);
+  //};
 
   Node* node(int idx) { return nodes_[idx]; }
 

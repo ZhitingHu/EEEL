@@ -1,0 +1,257 @@
+ren'py_games_and_visual_novels	
+apple_inc._typefaces	
+apple_design_award_winners	
+software_that_uses_wxwidgets	
+x86_macintosh_computers	
+google_chrome_extensions	
+calligra_suite	
+phineas_and_ferb_characters	
+apple_inc._advertising	
+mac_os_character_encodings	
+apple_ii_game_covers	
+itunes-exclusive_releases	itunes_originals	
+libreoffice	
+os_x_development	os_x_programming_tools	
+macintosh_magazines	
+macintosh_computers_by_cpu_family	68k_macintosh_computers	powerpc_macintosh_computers	x86_macintosh_computers	
+apple_inc._people	apple_inc._employees	directors_of_apple_inc.	
+java_platform_software	java_applets	java_development_tools	java_internet_relay_chat_clients	java_libraries	software_programmed_in_java	
+macbook	
+macintosh_quadra_series	
+os_x-only_software	os_x-only_free_software	
+os_x-only_software_made_by_apple_inc.	
+games_on_apple_inc._platforms	apple_bandai_pippin_games	apple_ii_games	apple_iigs_games	ios_games	ipod_games	mac_os_games	os_x_games	
+neverwinter_nights	
+apple_ii_clones	
+apple_inc._software	apple_ii_software	apple_inc._operating_systems	games_on_apple_inc._platforms	itunes	mac_os	mac_os-only_software_made_by_apple_inc.	os_x	os_x-only_software_made_by_apple_inc.	
+macintosh_viruses	
+apple_inc._acquisitions	next	
+macintosh_internals	at_attachment	
+the_journeyman_project	
+os_x_cd_ripping_software	
+apple_ii_periodicals	
+a/ux-capable_macintoshes	
+imac_series	
+serial_ata	
+ipod_software	ipod_games	
+screenshots_of_microsoft_office_for_mac	
+ipad	ios_(apple)	ipad_games	
+macintosh_centris_series	
+screenshots_of_microsoft_office_for_windows	
+quake_mods	
+quake_ii_mods	
+screenshots_of_flash_games	
+os_x_computer-aided_design_software	
+apple_inc.-related_templates	apple_products_graphical_timeline_templates	
+vi	
+os_x_server	
+ableton_live_users	
+a/ux_people	
+macintosh_computers	a/ux-capable_macintoshes	macintosh_case_designs	macintosh_computers_by_case_type	macintosh_computers_by_cpu_family	macintosh_computers_by_product_line	macintosh_servers	
+professional_quake_(series)_players	
+ipod_accessories	
+os_x_multimedia_software	ableton_live	adobe_creative_suite	adobe_flash	os_x_audio_editors	os_x_cd_ripping_software	os_x_media_players	
+apple_inc._services	apple_design_award_winners	itunes	itunes-exclusive_releases	
+macintosh_laptops	
+macintosh_platform	macintosh_clones	macintosh_computers	macintosh_firmware	macintosh_internals	macintosh_magazines	macintosh_peripherals	macintosh_platform_emulators	macintosh_websites	mac_os	mac_software_companies	
+mac_os_development	mac_os_apis	os_x_development	
+macintosh_lc_series	
+openoffice	
+apple_ii_word_processors	
+apple_evangelists	
+os_x_media_players	
+cross-platform_mobile_software	
+os_x_science_software	
+wxwidgets	software_that_uses_wxwidgets	
+kde_platform	
+apple_inc._industrial_design	apple_design_award_winners	snow_white_design_language	
+directors_of_apple_inc.	
+mac_os_people	
+kde_software	kde_extragear	
+apple_inc._litigation	
+screenshots_of_mac_games	
+machinima_based_on_a_quake_series_engine	
+marathon_(computer_game)	
+macintosh_servers	
+microsoft_office	microsoft_office_icons	microsoft_office_servers	screenshots_of_microsoft_office_for_windows	
+sodaplay	
+quake_iii_arena_mods	
+ipod	ipod_accessories	ipod_software	
+screenshots_of_ios_software	
+cancelled_os_x_games	
+ios_games	cancelled_ios_games	ios_game_covers	ios-only_games	screenshots_of_ios_games	
+mac_os_email_clients	
+symbian_software	symbian_instant_messaging_clients	
+itunes_originals	
+apple_iigs_games	
+mac_os-only_software	mac_os-only_web_browsers	os_x-only_software	
+os_x_real_time_communication_services	
+next	gnustep	
+mac_os_word_processors	
+microsoft_office_icons	
+free_software_programmed_in_java	hadoop	
+cross-platform_web_browsers	firefox	google_chrome	
+ipod_games	
+java_development_tools	java_decompilers	
+mac_software_companies	panic_software	plasq	
+flash_television_shows	
+qt_(framework)	software_that_uses_qt	
+mac_os_text_editors	
+kde_games	
+apple_ii_software	apple_ii_games	apple_ii_word_processors	cp/m_software	
+mac_os	mac_os_character_encodings	mac_os_development	mac_os_people	mac_os_software	os_x	
+phineas_and_ferb_episodes	
+kdepim	
+phineas_and_ferb	phineas_and_ferb_characters	phineas_and_ferb_episodes	phineas_and_ferb_video_games	
+bejeweled	
+macintosh_firmware	
+macintosh_case_designs	
+apple_inc._displays	
+cancelled_ios_games	
+macintosh_clones	
+java_applets	
+os_x_graphics_software	adobe_creative_suite	adobe_flash	
+scummvm_supported_games	
+macintosh_rackmounted_computers	
+apple_inc._conferences	
+power_macintosh	
+ipad_games	
+gnustep	
+apple_ii-only_games	
+java_decompilers	
+adobe_creative_suite	adobe_photoshop	
+iphone_software	australian_languages_with_mobile_apps	first_nations_languages_with_mobile_apps	native_american_languages_with_mobile_apps	
+os_x_email_clients	
+quake	machinima_based_on_a_quake_series_engine	professional_quake_(series)_players	quake_4_mods	quake_iii_arena_mods	quake_ii_mods	quake_mods	
+macintosh_performa_series	
+iphone_video_game_engines	
+s60_(software_platform)	
+snow_white_design_language	
+at_attachment	serial_ata	
+apple_specialists	
+os_x_malware	
+mac_os-only_web_browsers	
+os_x_web_browsers	
+apple_inc._executives	
+os_x_games	bejeweled	cancelled_os_x_games	flash_games	heretic_and_hexen	humble_bundle_games	java_platform_games	macintosh_game_covers	marathon_(computer_game)	neverwinter_nights	os_x_game_covers	os_x-only_games	postal_(video_game_series)	quake	ren'py_games_and_visual_novels	scummvm_supported_games	starcraft	
+ableton_live	ableton_live_users	
+screenshots_of_apple_ii_games	
+os_x_internet_relay_chat_clients	
+java_platform_games	sodaplay	
+os_x_audio_editors	
+adobe_flash	adobe_flex	flash_cartoons	
+proprietary_cross-platform_software	microsoft_office	
+plasq	
+quake_4_mods	
+apple_newton	
+flash_games	flash_games_ported_to_consoles	miniclip_games	screenshots_of_flash_games	
+os_x_emulation_software	
+mac_os_emulation_software	
+web_browsers_based_on_firefox	
+postal_(video_game_series)	
+starcraft_templates	
+macintosh_computers_by_product_line	imac_series	macbook	macintosh_centris_series	macintosh_ii_series	macintosh_lc_series	macintosh_(original)_series	macintosh_performa_series	macintosh_quadra_series	powerbook	power_macintosh	
+symbian_os	s60_(software_platform)	symbian_software	
+hadoop	
+mac_os_media_players	os_x_media_players	
+powerbook	
+mac_os_internet_relay_chat_clients	
+mac_os_software	macintosh_viruses	mac_os_email_clients	mac_os_emulation_software	mac_os_graphics_software	mac_os_instant_messaging_clients	mac_os_internet_relay_chat_clients	mac_os_multimedia_software	mac_os-only_software	mac_os_text_editors	mac_os_web_browsers	mac_os_word_processors	os_x_software	screenshots_of_mac_software	
+a/ux	a/ux_people	
+apple_products_graphical_timeline_templates	macintosh_models_graphical_timeline_templates	
+itunes	itunes-exclusive_releases	
+cross-platform_free_software	emacs	libreoffice	openoffice	vi	
+mac_os_graphics_software	os_x_graphics_software	
+flash_artists	
+ios_software	australian_languages_with_mobile_apps	first_nations_languages_with_mobile_apps	iphone_software	native_american_languages_with_mobile_apps	screenshots_of_ios_software	
+iphone	ios_software	iphone_accessories	iphone_software	iphone_video_game_engines	
+ios_game_covers	
+flash_games_ported_to_consoles	
+compact_macintosh	
+starcraft_competitions	
+kde_education_project	
+apple_personal_digital_assistants	apple_newton	
+panic_software	
+google_chrome	google_chrome_extensions	
+apple_inc._mobile_phones	iphone	
+macintosh_towers	
+os_x	ios_(apple)	os_x_apis	os_x_development	os_x_server	os_x_software	screenshots_of_os_x_software	
+apple_ii_family	apple_iigs_games	apple_ii_periodicals	apple_ii_peripherals	apple_ii_software	
+os_x_apis	
+adobe_photoshop	
+phineas_and_ferb_video_games	
+apple_ii_peripherals	
+apple_inc._hardware	apple_ii_computers	apple_ii_family	apple_inc._displays	apple_inc._mobile_phones	apple_inc._peripherals	apple_inc._printers	apple_personal_digital_assistants	ipad	ipod	macintosh_computers	macintosh_peripherals	macintosh_platform	
+macintosh_desktops	
+os_x-only_games	
+apple_inc._operating_systems	a/ux	ios_(apple)	mac_os	os_x	
+macintosh_models_graphical_timeline_templates	
+residual_supported_games	
+68k_macintosh_computers	
+apple_inc._printers	
+ios_jailbreaking	
+os_x-only_free_software	
+os_x_text_editors	
+mac_os_games	cancelled_mac_os_games	macintosh_game_covers	mac_os-only_games	marathon_(computer_game)	os_x_games	postal_(video_game_series)	residual_supported_games	screenshots_of_mac_games	scummvm_supported_games	starcraft	the_journeyman_project	
+first_nations_languages_with_mobile_apps	
+os_x_software	calligra_suite	cross-platform_software	kde_software_compilation	os_x_backup_software	os_x_computer-aided_design_software	os_x_email_clients	os_x_emulation_software	os_x_graphics_software	os_x_instant_messaging_clients	os_x_internet_relay_chat_clients	os_x_malware	os_x_multimedia_software	os_x-only_software	os_x_programming_tools	os_x_real_time_communication_services	os_x_science_software	os_x_text_editors	os_x_web_browsers	os_x_word_processors	screenshots_of_mac_software	
+starcraft_media	
+firefox_add-ons	
+cross-platform_software	cross-platform_free_software	cross-platform_mobile_software	cross-platform_web_browsers	java_platform_software	kde_platform	proprietary_cross-platform_software	qt_(framework)	rust_(programming_language)	wxwidgets	
+os_x_programming_tools	
+native_american_languages_with_mobile_apps	
+australian_languages_with_mobile_apps	
+apple_ii_games	apple_ii_game_covers	apple_ii-only_games	screenshots_of_apple_ii_games	
+symbian_instant_messaging_clients	
+os_x_word_processors	
+macintosh_ii_series	
+professional_starcraft_players	
+microsoft_office_servers	
+ios_(apple)	ios_jailbreaking	ios_software	
+firefox	firefox_add-ons	web_browsers_based_on_firefox	
+cancelled_mac_os_games	
+software_that_uses_qt	kde_software	symbian_os	
+powerpc_macintosh_computers	
+cp/m_software	
+screenshots_of_ios_games	
+macintosh_websites	
+os_x_instant_messaging_clients	
+iphone_accessories	
+screenshots_of_mac_software	
+adobe_flex	
+macintosh_game_covers	
+miniclip_games	
+apple_inc._peripherals	apple_ii_peripherals	ipod	macintosh_peripherals	
+os_x_backup_software	
+flash_cartoons	flash_artists	flash_television_shows	phineas_and_ferb	
+kde_extragear	
+mac_os_apis	
+java_internet_relay_chat_clients	
+screenshots_of_os_x_software	screenshots_of_microsoft_office_for_mac	
+apple_bandai_pippin_games	
+apple_inc.	apple_inc._acquisitions	apple_inc._advertising	apple_inc._conferences	apple_inc._hardware	apple_inc._industrial_design	apple_inc._litigation	apple_inc._people	apple_inc.-related_templates	apple_inc._services	apple_inc._software	apple_inc._typefaces	apple_specialists	macintosh_platform	
+apple_inc._employees	apple_evangelists	apple_inc._executives	
+macintosh_all-in-ones	compact_macintosh	
+macintosh_peripherals	
+os_x_game_covers	
+kde_software_compilation	kde_education_project	kde_games	kdepim	
+java_libraries	
+macintosh_platform_emulators	
+starcraft_commentators	
+mac_os-only_games	os_x-only_games	
+macintosh_(original)_series	
+humble_bundle_games	
+macintosh_computers_by_case_type	macintosh_all-in-ones	macintosh_desktops	macintosh_laptops	macintosh_rackmounted_computers	macintosh_towers	
+starcraft_characters	
+emacs	
+mac_os-only_software_made_by_apple_inc.	
+mac_os_multimedia_software	adobe_flash	mac_os_media_players	os_x_multimedia_software	
+ios-only_games	rolando	
+rust_(programming_language)	
+mac_os_instant_messaging_clients	
+rolando	
+software_programmed_in_java	free_software_programmed_in_java	
+apple_ii_computers	apple_ii_clones	
+starcraft	professional_starcraft_players	starcraft_characters	starcraft_commentators	starcraft_competitions	starcraft_media	starcraft_templates	
+mac_os_web_browsers	cross-platform_web_browsers	mac_os-only_web_browsers	os_x_web_browsers	
+heretic_and_hexen	

@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <utility>
 #include <string>
+#include <cmath>
 
 namespace entity {
 
@@ -36,6 +37,8 @@ public:
   float* mutable_data() { return data_; }
 
   inline int count() const { return count_; }
+  inline int num_row() const { return num_row_; }
+  inline int num_col() const { return num_col_; }
 
   inline float data_at(const int r, const int c = 0) const {
 #ifdef DEBUG
@@ -54,7 +57,7 @@ public:
   }
   
   inline void ClearData() {
-    memset(data_, 0, count_);
+    memset(data_, 0, count_ * sizeof(float));
   }
   
   void CopyFrom(const Blob* source, const float coeff = 1.0) {
@@ -67,13 +70,21 @@ public:
       data_[idx] = source_data[idx] * coeff;
     }  
   }
+
   void Accumulate(const Blob* source, const float coeff = 1.0) {
 #ifdef DEBUG
     CHECK_EQ(count_, source->count());
 #endif
     const float* source_data = source->data();
     for (int idx = 0; idx < count_; ++idx) {
+      const float tmp = data_[idx]; //TODO
       data_[idx] += source_data[idx] * coeff;
+#ifdef DEBUG
+    if (isnan(data_[idx])) {
+      LOG(ERROR) << data_[idx] << " = " << tmp << " + " << source_data[idx] << " * " << coeff;
+    }
+    CHECK(!isnan(data_[idx]));
+#endif
     }  
   }
 
@@ -83,16 +94,30 @@ public:
 #endif
     float sum = 0;
     for (int idx = 0; idx < count_; ++idx) {
-      sum += data_[idx];
+      sum += data_[idx] * data_[idx];
     }
+    sum = sqrt(sum);
 #ifdef DEBUG
+    if (!(sum > 1e-7)) {
+      for (int idx = 0; idx < count_; ++idx) {
+        //sum += data_[idx] * data_[idx];
+        LOG(ERROR) << data_[idx];
+      }
+    }
     CHECK_GT(sum, 1e-7);
 #endif
     for (int idx = 0; idx < count_; ++idx) {
       data_[idx] /= sum;
     }
   }
- 
+  
+  // test 
+  void CheckNaN() {
+    for (int idx = 0; idx < count_; ++idx) {
+      CHECK(!isnan(data_[idx]));
+    }
+  }
+
 private:
 
   inline int offset(const int r, const int c) const {
@@ -107,6 +132,7 @@ private:
       LOG(FATAL) << "Unknown metric mode.";
     }
   }
+  
  
 private: 
   float* data_;

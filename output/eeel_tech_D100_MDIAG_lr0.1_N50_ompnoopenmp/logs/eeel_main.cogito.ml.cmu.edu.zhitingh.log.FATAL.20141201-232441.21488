@@ -1,0 +1,4 @@
+Log file created at: 2014/12/01 23:24:41
+Running on machine: cogito.ml.cmu.edu
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+F1201 23:24:41.655818 21488 solver.cpp:157] Check failed: grad 

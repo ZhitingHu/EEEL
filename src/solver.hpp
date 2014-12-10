@@ -14,6 +14,8 @@ namespace entity {
 class Solver {
 public:
   Solver(const int num_entity, const int num_category);
+  Solver() {}
+
   ~Solver();
   
   // Initialization
@@ -27,18 +29,23 @@ public:
   void Solve_single(const vector<Datum*>& minibatch);
   void Solve_omp(const vector<Datum*>& minibatch);
 
+  void Snapshot(const string& output_path, const int iter);
+  void Restore(const string& snapshot_path, const int iter);
+
   const float ComputeObjective(const vector<Datum*>& val_batch);
   const float ComputeObjective_single(const vector<Datum*>& val_batch);
   const float ComputeObjective_omp(const vector<Datum*>& val_batch);
   
-  const int num_entity() { return num_entity_; }
-  const int dim_embedding() { return dim_embedding_; }
-  const int num_category() { return num_category_; }
-
-private:
   const float ComputeDist(const int entity_from, const int entity_to, 
       const Path* path);
 
+  const int num_entity() { return num_entity_; }
+  const int dim_embedding() { return dim_embedding_; }
+  const int num_category() { return num_category_; }
+  const vector<Blob*> entities() { return entities_; }
+  const vector<Blob*> categories() { return categories_; }
+
+private:
   // grad += coeff * { (dist_metric + dist_metric^T) 
   //   * (entity_from_vec - entity_to_vec) } 
   // Note: the ordering of entity_from and entity_to matters!
@@ -51,6 +58,10 @@ private:
   void ComputeEntityGradient(Datum* datum);
   void ComputeCategoryGradient(Datum* datum);
 
+  void SnapshotParameters(const string& param_filename);
+  void SnapshotBlobs(const string& blobs_filename, const vector<Blob*>& blobs);
+  void RestoreParameters(const string& param_filename);
+  void RestoreBlobs(const string& blobs_filename, vector<Blob*>& blobs);
 
 private:
   vector<Blob*> entities_;
@@ -73,6 +84,7 @@ private:
   int num_epoch_on_batch_;
   int num_iter_on_entity_;
   int num_iter_on_category_;
+  int snapshot_;
   bool openmp_;
 };
 

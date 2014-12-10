@@ -12,38 +12,73 @@ namespace entity {
 
 class Datum {
 public:
-  Datum(int entity_i, int entity_o, int count) : 
-    entity_i_(entity_i), entity_o_(entity_o), count_(count){
-    // TODO
-    // init ...
+  Datum(const int entity_i, const int entity_o, const int count, 
+      Path* path, const int num_neg_sample) : entity_i_(entity_i), 
+      entity_o_(entity_o), count_(count), category_path_(path), 
+      category_path_nodes_(path->category_nodes()) {
+    entity_i_grad_ = new Blob(entity::Context::dim_embedding());
+    entity_o_grad_ = new Blob(entity::Context::dim_embedding());  
+
+    neg_entity_id_.resize(num_neg_sample);
+    neg_entity_grads_.resize(num_neg_sample);
+    for (int i = 0; i < num_neg_sample; ++i) {
+      neg_entity_grads_[i] = new Blob(entity::Context::dim_embedding());
+    }
+    //positive_path_size = category_path_->category_nodes().size()
+    //for (int i = 0; i < positive_path_size; ++i) {
+    //  category_grads_.push_back(new Blob(
+    //      entity::Context::dim_embedding(), entity::Context::dim_embedding()));
+    //}
+    ClearNegSamples();
+  };
+
+  ~Datum() {
+     // TODO  
    };
-  ~Datum() {};
   
   const int entity_i() { return entity_i_; }
   const int entity_o() { return entity_o_; }
   const int count() { return count_; }
-  Path* category_path() { return category_path_; }
-  
 
-  void clear_negs(){
-    vector<int>().swap(neg_entity_id_);
+  Path* category_path() {
+#ifdef DEBUG
+    CHECK(category_path_ != NULL);
+#endif
+   return category_path_; 
+  }
+  
+  void ClearNegSamples() {
     vector<Path*>().swap(neg_category_paths_);
-    vector<Blob*>().swap(neg_entity_grads_);
     vector<Blob*>().swap(category_grads_);
     category_index_.clear();
+    
+    for (int i = 0; i < neg_entity_grads_.size(); ++i) {
+      neg_entity_grads_[i]->ClearData();
+    }
+    for (int c_idx = 0; c_idx < category_path_nodes_.size(); ++c_idx) {
+      category_index_[category_path_nodes_[c_idx]] = c_idx;
+      category_grads_.push_back(new Blob(
+          entity::Context::dim_embedding(), entity::Context::dim_embedding()));
+    }
   }
 
   /// used in optimization 
-  void AddNegSample(int neg_entity_id, Path* path) {
-    
-    neg_entity_id_.push_back(neg_entity_id);
+  void AddNegSample(int neg_idx, int neg_entity_id, Path* path) {
+#ifdef DEBUG
+    CHECK_LT(neg_idx, neg_entity_id_.size());
+#endif
+    neg_entity_id_[neg_idx] = neg_entity_id;
     neg_category_paths_.push_back(path);
-    // Note(hzt): also update category_index_ and categroy_grads_
-    
-    //TODO
-    //ector<Blob*>().swap(neg_entity_grads_);
-    //map<int, int> category_index_;
-    //vector<Blob*> category_grads_;
+
+    const vector<int>& neg_category_path_nodes = path->category_nodes();
+    for (int c_idx = 0; c_idx < neg_category_path_nodes.size(); ++c_idx) {
+      const int category_id = neg_category_path_nodes[c_idx];
+      if (category_index_.find(category_id) == category_index_.end()) {
+        category_index_[category_id] = category_grads_.size();
+        category_grads_.push_back(new Blob(
+            entity::Context::dim_embedding(), entity::Context::dim_embedding()));
+      }
+    }
   }
 
   Blob* entity_i_grad() { return entity_i_grad_; }
@@ -78,6 +113,7 @@ private:
   int entity_o_;
   int count_;
   Path* category_path_;
+  const vector<int>& category_path_nodes_;
 
   /// used in optimization 
   Blob* entity_i_grad_;
