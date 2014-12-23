@@ -1,6 +1,8 @@
 
 PROJECT := eeel
 
+# comment it to avoid omp
+OPENMP = 1
 # comment it to speedup
 DEBUG = 1
 # comment it if use double
@@ -43,13 +45,21 @@ CXXFLAGS = -g \
            -fno-builtin-realloc \
            -fno-builtin-free \
            -fno-omit-frame-pointer \
-           -std=c++0x
-           #-std=c++11
+           -std=c++11
+           #-std=c++0x -pthread
 
 INCFLAGS = -I${EEEL_THIRD_PARTY}/include -I./src
 LDFLAGS = -L${EEEL_THIRD_PARTY}/lib \
           -lgflags \
           -lglog
+
+
+ifeq ($(OPENMP), 1)
+  COMMON_FLAGS += -DOPENMP
+  CXXFLAGS += -fopenmp
+else
+  COMMON_FLAGS += -DNOPENMP
+endif
 
 # Debugging
 ifeq ($(DEBUG), 1)

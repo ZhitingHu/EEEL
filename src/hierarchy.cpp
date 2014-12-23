@@ -37,7 +37,7 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
   queue<int> unprocessed_nodes;
   set<int> processed_nodes;
   // expand from common ancestors
-  set_it_ = common_ancestors.begin();
+  set<int>::const_iterator set_it_ = common_ancestors.begin();
   for (; set_it_ != common_ancestors.end(); ++set_it_) {
     unprocessed_nodes.push(*set_it_);
   }
@@ -54,7 +54,8 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
     processed_nodes.insert(cur_idx);
     node_weight_sum = 0;
     node_weight_cnt = 0;
-    map_cit_ = entity_from_ancestor_weights.find(cur_idx); 
+    map<int, float>::const_iterator map_cit_ 
+        = entity_from_ancestor_weights.find(cur_idx); 
     if (map_cit_ != entity_from_ancestor_weights.end()) {
       node_weight_sum += map_cit_->second;
       ++node_weight_cnt;
@@ -105,7 +106,7 @@ void Hierarchy::FindCommonAncestors(int entity_from, int entity_to,
   /// get common ancestors 
   int cur_ancestor_idx;
   int c_idx_i;
-  map_cit_ = entity_to_ancestor_weights.begin();
+  map<int, float>::const_iterator map_cit_ = entity_to_ancestor_weights.begin();
   for (; map_cit_ != entity_to_ancestor_weights.end(); ++map_cit_) {
     cur_ancestor_idx = map_cit_->first;
     // common ancestor: have disjoint paths to entity_from and entity_to

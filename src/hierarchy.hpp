@@ -68,8 +68,8 @@ private:
   int num_category_;
   int max_node_level_;
 
-  set<int>::const_iterator set_it_;
-  map<int, float>::const_iterator map_cit_;
+  //set<int>::const_iterator set_it_;
+  //map<int, float>::const_iterator map_cit_;
 };
 
 }  // namespace entity

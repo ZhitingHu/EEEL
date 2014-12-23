@@ -12,15 +12,13 @@
 #include <iterator>
 #include <vector>
 #include <cstdint>
+#include <thread>
+#include <time.h>
+#include <omp.h>
 
 namespace entity {
 
   using namespace util;
-
-namespace {
-  // Use the next kNumDataEval data per thread to evaluate objective.
-  const int kNumDataEval = 100;
-}  // anonymous namespace
 
   // Constructor
 EEEngine::EEEngine() {
@@ -205,6 +203,23 @@ void EEEngine::ReadData() {
   level_file.close();
 }
 
+void EEEngine::ThreadCreateMinibatch(const vector<int>* next_minibatch_data_idx,
+    vector<Datum*>* next_minibatch) {
+  //LOG(INFO) << "=== start";
+  const int batch_size = next_minibatch_data_idx->size();
+#ifdef OPENMP
+  #pragma omp parallel for num_threads(8)
+#endif
+  for (int d_idx = 0; d_idx < batch_size; ++d_idx) {
+    const int data_idx = next_minibatch_data_idx->at(d_idx);
+    Datum* datum = train_data_.datum(data_idx);
+    SampleNegEntities(datum);
+    
+    (*next_minibatch)[d_idx] = datum;
+  }
+  //LOG(INFO) << "=== end";
+}
+
 void EEEngine::SampleNegEntities(Datum* datum) {
   const int entity_i = datum->entity_i();
   const map<int, Path*>& pos_entities 
@@ -226,6 +241,20 @@ void EEEngine::SampleNegEntities(Datum* datum) {
   }
 }
 
+inline void EEEngine::CopyMinibatch(const vector<Datum*>& source, 
+    vector<Datum*>& target) {
+  for (int idx = 0; idx < source.size(); ++idx) {
+    target[idx] = source[idx];
+  }
+}
+
+inline void EEEngine::ClearMinibatch(vector<Datum*>& minibatch) {
+  // clear neg samples and related grads
+  for (int d_idx = 0; d_idx < minibatch.size(); ++d_idx){
+    minibatch[d_idx]->ClearNegSamples();
+  }
+}
+
 void EEEngine::Start() {
   int thread_id = 0;
 
@@ -235,6 +264,7 @@ void EEEngine::Start() {
   const int num_thread = context.get_int32("num_thread");
   const int num_iter = context.get_int32("num_iter");
   const int batch_size = context.get_int32("batch_size");
+  const int eval_interval = context.get_int32("eval_interval");
   const int num_iter_per_eval = context.get_int32("num_iter_per_eval");
   const int snapshot = context.get_int32("snapshot");
   const float learning_rate = context.get_double("learning_rate");
@@ -247,7 +277,7 @@ void EEEngine::Start() {
   Solver eeel_solver(num_entity_, num_category_);
   eeel_solver.RandInit();
 
-  // Workload Manager configuration
+  // workload manager configuration
   WorkloadManagerConfig workload_mgr_config;
   workload_mgr_config.thread_id = thread_id;
   workload_mgr_config.client_id = client_id;
@@ -257,51 +287,106 @@ void EEEngine::Start() {
   workload_mgr_config.num_data = num_train_data_;
   WorkloadManager workload_mgr(workload_mgr_config);
 
+  // pre-computed minibatch
+  vector<int> next_minibatch_data_idx(workload_mgr.GetBatchSize());
+  vector<Datum*> next_minibatch(workload_mgr.GetBatchSize());
+  // current-used minibatch
   vector<Datum*> minibatch(workload_mgr.GetBatchSize());
-  vector<int> test_minibatch_data_idx(kNumDataEval);
-  vector<Datum*> test_minibatch(kNumDataEval);
-  // Training	
-  for (int iter = 1; iter <= num_iter; ++iter) {
-    // Create Minibatch 
-    for (int d_idx = 0; d_idx < workload_mgr.GetBatchSize(); ++d_idx) {
-      int data_idx = workload_mgr.GetDataIdxAndAdvance();
-      Datum* datum = train_data_.datum(data_idx);
-      SampleNegEntities(datum);
+  // pre-computed test minibatch
+  vector<int> next_test_minibatch_data_idx(workload_mgr.GetBatchSize());
+  vector<Datum*> next_test_minibatch(workload_mgr.GetBatchSize());
+  // current-used test minibatch
+  vector<Datum*> test_minibatch(workload_mgr.GetBatchSize());
+  bool test = false;
+  thread minibatch_creator;
 
-      minibatch[d_idx] = datum;
-    }
-    
+  // create the first minibatch 
+  for (int d_idx = 0; d_idx < workload_mgr.GetBatchSize(); ++d_idx) {
+    int data_idx = workload_mgr.GetDataIdxAndAdvance();
+    Datum* datum = train_data_.datum(data_idx);
+    SampleNegEntities(datum);
+
+    next_minibatch[d_idx] = datum;
+  }
+  
+  clock_t t_start = clock();
+
+  // Train	
+  for (int iter = 1; iter <= num_iter; ++iter) {
+    // get current minibatch from pre-computed one
+    CopyMinibatch(next_minibatch, minibatch);
+    // pre-compute next minibatch
+    workload_mgr.GetBatchDataIdx(workload_mgr.GetBatchSize(), 
+        next_minibatch_data_idx);
+    //LOG(INFO) << "start thread";
+    minibatch_creator = thread(&EEEngine::ThreadCreateMinibatch, this, 
+        &next_minibatch_data_idx, &next_minibatch);
+    //ThreadCreateMinibatch(&next_minibatch_data_idx, &next_minibatch);
+    //LOG(INFO) << "end thread";
+
+    // TODO
+    //LOG(INFO) << workload_mgr.GetDataIdx() << " " 
+    //    << ((double)(clock() - t_start) / CLOCKS_PER_SEC);
+
+    // optimize based on current minibatch
     eeel_solver.Solve(minibatch);
     
-    // Clear neg samples and related grads
-    for (int d_idx = 0; d_idx < workload_mgr.GetBatchSize(); ++d_idx){
-      minibatch[d_idx]->ClearNegSamples();
-    }
+    ClearMinibatch(minibatch);
 
-    workload_mgr.IncreaseDataIdxByBatchSize();
-    
-    if (iter % num_iter_per_eval == 0) {
+    if (iter % eval_interval == 0 || iter == 1) {
+      float obj = 0;
+      int cur_batch_start_idx = workload_mgr.GetDataIdx();
+      // get the first test minibatch
+      minibatch_creator.join();
+      CopyMinibatch(next_minibatch, test_minibatch);
+      for (int test_iter = 0; test_iter < num_iter_per_eval; ++test_iter) {
+
+        // TODO
+        //LOG(INFO) << "test " << cur_batch_start_idx << " "
+        //    << ((double)(clock() - t_start) / CLOCKS_PER_SEC);
+
+        if (test_iter < num_iter_per_eval - 1) {
+          // pre-compute next test minibatch
+          cur_batch_start_idx 
+              = workload_mgr.GetNextBatchStartIdx(cur_batch_start_idx);
+          workload_mgr.GetBatchDataIdx(workload_mgr.GetBatchSize(), 
+              next_test_minibatch_data_idx, cur_batch_start_idx);
+          minibatch_creator = thread(&EEEngine::ThreadCreateMinibatch, this,
+              &next_test_minibatch_data_idx, &next_test_minibatch);
+          //ThreadCreateMinibatch(&next_test_minibatch_data_idx, &next_test_minibatch);
+        }
+
+        // use current minibatch for test
+        obj += eeel_solver.ComputeObjective(test_minibatch);
+
+        // preserve the first test minibatch for training usage
+        if (test_iter > 0) { 
+          ClearMinibatch(test_minibatch);
+        }
+
+        if (test_iter < num_iter_per_eval - 1) {    
+          minibatch_creator.join();
+          CopyMinibatch(next_test_minibatch, test_minibatch);
+        }
+      }
+      
+      obj /= (workload_mgr.GetBatchSize() * num_iter_per_eval); 
+      LOG(ERROR) << iter << "," << obj << "," 
+          << ((double)(clock() - t_start) / CLOCKS_PER_SEC);
       ++eval_counter;
-      // Create test batch
-      workload_mgr.GetBatchDataIdx(kNumDataEval, test_minibatch_data_idx); 
-      for (int d_idx = 0; d_idx < kNumDataEval; ++d_idx) {
-        Datum* datum = train_data_.datum(test_minibatch_data_idx[d_idx]);
-        SampleNegEntities(datum);
-
-        test_minibatch[d_idx] = datum;
-      }
-      float obj = eeel_solver.ComputeObjective(test_minibatch);
-      LOG(ERROR) << iter << "," << obj;
-      cout << "iter=" << iter << ",obj=" << obj << endl;
-
-      // Clear neg samples and related grads
-      for (int d_idx = 0; d_idx < kNumDataEval; ++d_idx){
-        test_minibatch[d_idx]->ClearNegSamples();
-      }
+      test = true;
     }
     
     if (iter % snapshot == 0) {
       eeel_solver.Snapshot(output_file_prefix, iter);
+    }
+    
+    workload_mgr.IncreaseDataIdxByBatchSize();
+    if (!test) {
+      //LOG(INFO) << "wait";
+      minibatch_creator.join();
+    } else {
+      test = false;
     }
   } // end of training
   

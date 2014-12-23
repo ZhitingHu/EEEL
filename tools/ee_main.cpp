@@ -20,6 +20,7 @@ DEFINE_string(distance_metric_mode, "DIAG", "");
 
 // Training Engine Parameters
 DEFINE_int32(num_iter, 1, "Number of iteration.");
+DEFINE_int32(eval_interval, 1, "Number of iteration between two evaluations");
 DEFINE_int32(num_iter_per_eval, 1, "Number of iteration per evaluation");
 //DEFINE_int32(num_batch_per_epoch, 50, "Number of batch per epoch");
 DEFINE_int32(batch_size, 50, "Size of batch");
@@ -55,6 +56,7 @@ DEFINE_string(level_filename, "level.txt", "category level filename");
 DEFINE_int32(num_test_data, 0, "Number of testing data.");
 
 int main(int argc, char *argv[]) {
+  FLAGS_alsologtostderr = 1;
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   entity::EEEngine ee_engine;

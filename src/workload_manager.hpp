@@ -62,6 +62,10 @@ public:
     }
     return ret;
   }
+  
+  int inline GetDataIdx() {
+    return curr_data_idx_;
+  }
 
   //
   void inline IncreaseDataIdxByBatchSize() {
@@ -75,10 +79,21 @@ public:
     }
   }
 
+  int inline GetNextBatchStartIdx(const int curr_batch_start_idx) {
+    int next_batch_start_idx = curr_batch_start_idx + batch_size_;
+    if (next_batch_start_idx >= data_idx_end_) {
+      next_batch_start_idx = (next_batch_start_idx - data_idx_end_)
+        % (data_idx_end_ - data_idx_begin_) + data_idx_begin_;
+    }
+    return next_batch_start_idx;
+  }
+
   // Get the next num_data indices without advancing.
-  void GetBatchDataIdx(const int num_data, vector<int>& batch_data_idx) const {
+  void GetBatchDataIdx(const int num_data, vector<int>& batch_data_idx, 
+      int base_data_idx = -1) const {
+    base_data_idx = (base_data_idx == -1 ? curr_data_idx_ : base_data_idx);
     for (int i = 0; i < num_data; ++i) {
-      batch_data_idx[i] = curr_data_idx_ + i;
+      batch_data_idx[i] = base_data_idx + i;
       // Wrap around to be within [data_idx_begin_, data_idx_end_)
       if (batch_data_idx[i] >= data_idx_end_) {
         batch_data_idx[i] = (batch_data_idx[i] - data_idx_end_)
@@ -86,6 +101,15 @@ public:
       }
     }
   }
+
+  // Randomly get batch data idx without advancing 
+  //void GetRandomBatchDataIdx(const int num_data, 
+  //    vector<int>& batch_data_idx) const {
+  //  for (int i = 0; i < num_data; ++i) {
+  //    batch_data_idx[i] 
+  //        = rand() % (data_idx_end_ - data_idx_begin_) + data_idx_begin_;
+  //  }
+  //}
 
   // Is end of the data set (of this partition).
   bool inline IsEnd() {

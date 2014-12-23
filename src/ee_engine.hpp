@@ -33,10 +33,15 @@ public:
 private:    // private functions
 
   void SampleNegEntities(Datum* datum);
+  void ThreadCreateMinibatch(const vector<int>* next_minibatch_data_idx,
+      vector<Datum*>* next_minibatch);
 
+  inline void CopyMinibatch(const vector<Datum*>& source, 
+      vector<Datum*>& target); 
+  inline void ClearMinibatch(vector<Datum*>& minibatch);
+  
 private:
 
-  // ============== EE Variables ==================
   Dataset train_data_;
   //Dataset test_data_;
   int num_train_data_;  
