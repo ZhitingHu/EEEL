@@ -5,17 +5,31 @@
 #include "path.hpp"
 #include <vector>
 #include <map>
-#include <cstdint>
+#include <stdint.h>
 #include <utility>
 
 namespace entity {
 
 class Datum {
 public:
+  // must call AddPath() to finish initialization
+  Datum(const int entity_i, const int entity_o, const int count, 
+      const int num_neg_sample) : entity_i_(entity_i), 
+      entity_o_(entity_o), count_(count) {
+    entity_i_grad_ = new Blob(entity::Context::dim_embedding());
+    entity_o_grad_ = new Blob(entity::Context::dim_embedding());  
+
+    neg_entity_id_.resize(num_neg_sample);
+    neg_entity_grads_.resize(num_neg_sample);
+    for (int i = 0; i < num_neg_sample; ++i) {
+      neg_entity_grads_[i] = new Blob(entity::Context::dim_embedding());
+    }
+  };
+
   Datum(const int entity_i, const int entity_o, const int count, 
       Path* path, const int num_neg_sample) : entity_i_(entity_i), 
       entity_o_(entity_o), count_(count), category_path_(path), 
-      category_path_nodes_(path->category_nodes()) {
+      category_path_nodes_(&path->category_nodes()) {
     entity_i_grad_ = new Blob(entity::Context::dim_embedding());
     entity_o_grad_ = new Blob(entity::Context::dim_embedding());  
 
@@ -34,8 +48,14 @@ public:
 
   ~Datum() {
      // TODO  
-   };
+  };
   
+  void AddPath(Path* path) {
+    category_path_ = path; 
+    category_path_nodes_ = &(path->category_nodes());
+    ClearNegSamples();
+  }
+
   const int entity_i() { return entity_i_; }
   const int entity_o() { return entity_o_; }
   const int count() { return count_; }
@@ -55,8 +75,8 @@ public:
     for (int i = 0; i < neg_entity_grads_.size(); ++i) {
       neg_entity_grads_[i]->ClearData();
     }
-    for (int c_idx = 0; c_idx < category_path_nodes_.size(); ++c_idx) {
-      category_index_[category_path_nodes_[c_idx]] = c_idx;
+    for (int c_idx = 0; c_idx < category_path_nodes_->size(); ++c_idx) {
+      category_index_[category_path_nodes_->at(c_idx)] = c_idx;
       category_grads_.push_back(new Blob(
           entity::Context::dim_embedding(), entity::Context::dim_embedding()));
     }
@@ -113,7 +133,7 @@ private:
   int entity_o_;
   int count_;
   Path* category_path_;
-  const vector<int>& category_path_nodes_;
+  vector<int>* category_path_nodes_;
 
   /// used in optimization 
   Blob* entity_i_grad_;

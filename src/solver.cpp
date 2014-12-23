@@ -2,7 +2,7 @@
 // Date: 2014.10.26
 #include <random>
 #include <algorithm>
-#include <cstdint>
+#include <stdint.h>
 #include <cmath>
 #include <iostream>
 #include <fstream>
@@ -57,9 +57,9 @@ Solver::~Solver() {
 }
 	
 void Solver::RandInit() {
-  std::random_device rd;
-  std::mt19937 rng_engine(rd());
-  // (zhiting hu) cannot compile under -std=c++0x
+  //std::random_device rd;
+  //std::mt19937 rng_engine(rd());
+  //// (zhiting hu) cannot compile under -std=c++0x
   //std::uniform_real_distribution<float> dis(-kRandInitRange, kRandInitRange);
 
   for (int i = 0; i < num_entity_; ++i) {
@@ -176,8 +176,8 @@ void Solver::RestoreBlobs(const string& blobs_filename, vector<Blob*>& blobs) {
   while (getline(blobs_snapshot, line)) {
     Blob* blob = new Blob(num_row, num_col);
     istringstream iss(line);
-    vector<float> tokens{ 
-        std::istream_iterator<float>{iss}, std::istream_iterator<float>{}};
+    vector<float> tokens((std::istream_iterator<float>(iss)), 
+        std::istream_iterator<float>());
 
     for (int idx = 0; idx < tokens.size(); ++idx) {
       blob->mutable_data()[idx] = tokens[idx];

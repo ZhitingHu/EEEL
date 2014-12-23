@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <cstdint>
+#include <stdint.h>
 #include <utility>
 
 namespace entity {

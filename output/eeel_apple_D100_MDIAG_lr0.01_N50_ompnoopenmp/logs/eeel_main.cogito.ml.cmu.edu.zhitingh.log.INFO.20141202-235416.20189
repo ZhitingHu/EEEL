@@ -1,0 +1,17 @@
+Log file created at: 2014/12/02 23:54:16
+Running on machine: cogito.ml.cmu.edu
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1202 23:54:16.667842 20189 ee_engine.cpp:99] number of category: 257
+E1202 23:54:24.154922 20189 ee_engine.cpp:334] 1,-3041.55
+E1202 23:54:27.059624 20189 ee_engine.cpp:334] 2,-3965.23
+E1202 23:54:29.959311 20189 ee_engine.cpp:334] 3,-2306.82
+E1202 23:54:33.220821 20189 ee_engine.cpp:334] 4,-1393.46
+E1202 23:54:36.428930 20189 ee_engine.cpp:334] 5,-1515.73
+E1202 23:54:39.636086 20189 ee_engine.cpp:334] 6,-1672.84
+E1202 23:54:42.612100 20189 ee_engine.cpp:334] 7,-1302.63
+E1202 23:54:45.874991 20189 ee_engine.cpp:334] 8,-1553.81
+E1202 23:54:48.957509 20189 ee_engine.cpp:334] 9,-1031.98
+E1202 23:54:51.827337 20189 ee_engine.cpp:334] 10,-1195.13
+E1202 23:54:51.829251 20189 solver.cpp:91] Snapshoting to /home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_ompnoopenmp/entity_vectors_10
+E1202 23:54:52.703153 20189 solver.cpp:97] Snapshoting to /home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_ompnoopenmp/category_vectors_10
+I1202 23:54:52.730455 20189 ee_main.cpp:71] Entity Embedding finished and shut down!

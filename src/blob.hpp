@@ -4,7 +4,6 @@
 #include "common.hpp"
 
 #include <vector>
-#include <cstdint>
 #include <utility>
 #include <string>
 #include <cmath>

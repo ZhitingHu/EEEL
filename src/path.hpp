@@ -53,7 +53,7 @@ public:
     category_node_weights_[category_id] += weight;
   }
 
-  const vector<int>& category_nodes() const { return category_nodes_; }
+  vector<int>& category_nodes() { return category_nodes_; }
   const Blob* aggr_dist_metric() const { return aggr_dist_metric_; }
   
  

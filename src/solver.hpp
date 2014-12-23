@@ -5,7 +5,7 @@
 
 #include "blob.hpp"
 #include "datum.hpp"
-#include <cstdint>
+#include <stdint.h>
 #include <vector>
 #include <set>
 

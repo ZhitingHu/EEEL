@@ -1,7 +1,7 @@
 #include "hierarchy.hpp"
 #include <vector>
 #include <queue>
-#include <cstdint>
+#include <stdint.h>
 #include <utility>
 
 namespace entity {

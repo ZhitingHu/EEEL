@@ -9,7 +9,7 @@
 #include "node.hpp"
 #include "hierarchy.hpp"
 #include <vector>
-#include <cstdint>
+#include <stdint.h>
 #include <utility>
 #include <iostream>
 #include <fstream>

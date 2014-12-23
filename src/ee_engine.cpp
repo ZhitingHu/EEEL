@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
-#include <cstdint>
+#include <stdint.h>
 #include <thread>
 #include <time.h>
 #include <omp.h>
@@ -51,14 +51,14 @@ void EEEngine::ReadData() {
   string level_filename               = context.get_string("level_filename");
   
   // file streams
-  ifstream category_file(dataset_path + "/" + category_filename);
-  ifstream entity_file(dataset_path + "/" + entity_filename);
-  ifstream entity_ancestor_file(dataset_path + "/" + entity_to_ancestor_filename);
-  ifstream entity_category_file(dataset_path + "/" + entity_to_category_filename);
-  ifstream hierarchy_file(dataset_path + "/" + hierarchy_filename);
-  ifstream hierarchy_id_file(dataset_path + "/" + hierarchy_id_filename);
-  ifstream pair_file(dataset_path + "/" + pair_filename);
-  ifstream level_file(dataset_path + "/" + level_filename);
+  ifstream category_file((dataset_path + "/" + category_filename).c_str());
+  ifstream entity_file((dataset_path + "/" + entity_filename).c_str());
+  ifstream entity_ancestor_file((dataset_path + "/" + entity_to_ancestor_filename).c_str());
+  ifstream entity_category_file((dataset_path + "/" + entity_to_category_filename).c_str());
+  ifstream hierarchy_file((dataset_path + "/" + hierarchy_filename).c_str());
+  ifstream hierarchy_id_file((dataset_path + "/" + hierarchy_id_filename).c_str());
+  ifstream pair_file((dataset_path + "/" + pair_filename).c_str());
+  ifstream level_file((dataset_path + "/" + level_filename).c_str());
 
   if (!category_file.is_open())
     cout << "fail to open:" << dataset_path + category_filename << "\n";
@@ -100,8 +100,8 @@ void EEEngine::ReadData() {
   // 3. Parse entity file
   while (getline(entity_category_file, line)) {
     istringstream iss(line);
-    vector<int> tokens{ 
-        std::istream_iterator<int>{iss}, std::istream_iterator<int>{}};
+    vector<int> tokens( 
+        (std::istream_iterator<int>(iss)), std::istream_iterator<int>());
     
     // entity_idx in hierarchy = entity_id
     const int entity_idx = tokens[0];
@@ -119,7 +119,7 @@ void EEEngine::ReadData() {
   // 4. Parse hierarchy_id (category)
   while (getline(hierarchy_id_file, line)){
     istringstream iss(line);
-    vector<int> tokens{istream_iterator<int>{iss}, istream_iterator<int>{}};
+    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
     
     // revised by @hzt
     const int category_idx = tokens[0] + num_entity_;
@@ -138,7 +138,7 @@ void EEEngine::ReadData() {
   // category levels 
   while (getline(level_file, line)){
     istringstream iss(line);
-    vector<int> tokens{ istream_iterator<int>{iss}, istream_iterator<int>{} };
+    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
     Node *category_node 
         = entity_category_hierarchy_.node(tokens[0] + num_entity_);
     category_node->set_level(tokens[1]);
@@ -148,7 +148,8 @@ void EEEngine::ReadData() {
   int num_entity_ancetor_file_line = 0;
   while (getline(entity_ancestor_file, line)){
     istringstream iss(line);
-    vector<string> tokens{istream_iterator<string>{iss}, istream_iterator<string>{}};
+    vector<string> tokens((istream_iterator<string>(iss)), 
+        istream_iterator<string>());
     //743:8.3
     // entity_idx in heirarchy= entity_id
     const int entity_idx = stoi(tokens[0]);
@@ -173,22 +174,37 @@ void EEEngine::ReadData() {
   // 6. Parse pair File
   // Remark: current memory allocation is not good, 
   // consider allocate once than assign in future version.
-  while (getline(pair_file, line)){
+  while (getline(pair_file, line)) {
     istringstream iss(line);
-    vector<int> tokens{ istream_iterator<int>{iss},istream_iterator<int>{}};
+    //vector<int> tokens{istream_iterator<int>{iss},istream_iterator<int>{}};
+    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
 
     // revized by @hzt
     const int entity_i = tokens[0];
     const int entity_o = tokens[1];
     const int count = tokens[2];
-    Path* entity_pair_path 
-        = entity_category_hierarchy_.FindPathBetweenEntities(
-        entity_i, entity_o);
-    train_data_.AddDatum(entity_i, entity_o, count, entity_pair_path);
+
+    //Path* entity_pair_path 
+    //    = entity_category_hierarchy_.FindPathBetweenEntities(
+    //    entity_i, entity_o);
+    //train_data_.AddDatum(entity_i, entity_o, count, entity_pair_path);
+    train_data_.AddDatum(entity_i, entity_o, count);
     
     num_train_data_++;
-    //Datum *temp = train_data_.datum(num_train_data_ - 1);
-    //cout << temp->entity_i() << "\t" << temp->entity_o() << "\t" << temp->count() << endl;
+  }
+#ifdef OPENMP
+  #pragma omp parallel for
+#endif
+  for (int d_idx = 0; d_idx < num_train_data_; ++d_idx) {
+    Datum* datum = train_data_.datum(d_idx);
+    Path* entity_pair_path 
+        = entity_category_hierarchy_.FindPathBetweenEntities(
+        datum->entity_i(), datum->entity_o());
+    datum->AddPath(entity_pair_path);
+#ifdef OPENMP
+  #pragma omp critical
+#endif
+    train_data_.AddPath(datum->entity_i(), datum->entity_o(), entity_pair_path);
   }
   cout << "number of training data: " << num_train_data_ << endl;
 
@@ -208,7 +224,7 @@ void EEEngine::ThreadCreateMinibatch(const vector<int>* next_minibatch_data_idx,
   //LOG(INFO) << "=== start";
   const int batch_size = next_minibatch_data_idx->size();
 #ifdef OPENMP
-  #pragma omp parallel for num_threads(8)
+  #pragma omp parallel for
 #endif
   for (int d_idx = 0; d_idx < batch_size; ++d_idx) {
     const int data_idx = next_minibatch_data_idx->at(d_idx);

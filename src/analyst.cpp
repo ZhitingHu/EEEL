@@ -9,7 +9,7 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
-#include <cstdint>
+#include <stdint.h>
 #include <algorithm>
 
 namespace entity {
@@ -34,7 +34,7 @@ void Analyst::ComputeNearestNeibors(const int top_k,
     const string& output_path) {
   LOG(ERROR) << "Computing nearest neibors";
   ofstream output;
-  output.open(output_path + "/nearest_neibors");
+  output.open((output_path + "/nearest_neibors").c_str());
   for (int e_id = 0; e_id < solver_->num_entity(); ++e_id) {
     vector<pair<int, float> > nearest_entities;
     ComputeEntityNearestNeibors(e_id, nearest_entities);

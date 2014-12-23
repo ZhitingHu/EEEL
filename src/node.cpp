@@ -1,6 +1,6 @@
 #include "node.hpp"
 #include <vector>
-#include <cstdint>
+#include <stdint.h>
 #include <utility>
 
 namespace entity {

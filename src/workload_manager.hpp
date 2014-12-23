@@ -1,7 +1,7 @@
 #pragma once
 
 //#include <glog/logging.h>
-#include <cstdint>
+#include <stdint.h>
 
 
 namespace entity {

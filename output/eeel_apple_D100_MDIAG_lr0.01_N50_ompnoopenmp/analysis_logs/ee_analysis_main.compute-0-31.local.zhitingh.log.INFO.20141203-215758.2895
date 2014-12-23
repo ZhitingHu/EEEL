@@ -1,0 +1,11 @@
+Log file created at: 2014/12/03 21:57:58
+Running on machine: compute-0-31.local
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1203 21:57:58.532567  2895 ee_engine.cpp:88] number of category: 257
+E1203 21:58:02.626554  2895 solver.cpp:136] Restoring from /home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_ompnoopenmp iter=10
+E1203 21:58:02.632004  2895 solver.cpp:162] Restoring from /home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_ompnoopenmp/entity_vectors_10
+E1203 21:58:02.632550  2895 solver.cpp:171] 100 100 1
+E1203 21:58:05.084461  2895 solver.cpp:162] Restoring from /home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_ompnoopenmp/category_vectors_10
+E1203 21:58:05.085208  2895 solver.cpp:171] 100 100 100
+E1203 21:58:05.144019  2895 analyst.cpp:35] Computing nearest neibors
+E1203 21:58:05.145403  2895 ee_analysis_main.cpp:45] Done.
