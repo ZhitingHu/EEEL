@@ -45,7 +45,6 @@ void EEEngine::ReadData() {
   string entity_filename              = context.get_string("entity_filename");
   string entity_to_ancestor_filename  = context.get_string("entity_to_ancestor_filename");
   string entity_to_category_filename  = context.get_string("entity_to_category_filename");
-  string hierarchy_filename           = context.get_string("hierarchy_filename");
   string hierarchy_id_filename        = context.get_string("hierarchy_id_filename");
   string pair_filename                = context.get_string("pair_filename");
   string level_filename               = context.get_string("level_filename");
@@ -55,41 +54,37 @@ void EEEngine::ReadData() {
   ifstream entity_file((dataset_path + "/" + entity_filename).c_str());
   ifstream entity_ancestor_file((dataset_path + "/" + entity_to_ancestor_filename).c_str());
   ifstream entity_category_file((dataset_path + "/" + entity_to_category_filename).c_str());
-  ifstream hierarchy_file((dataset_path + "/" + hierarchy_filename).c_str());
   ifstream hierarchy_id_file((dataset_path + "/" + hierarchy_id_filename).c_str());
   ifstream pair_file((dataset_path + "/" + pair_filename).c_str());
   ifstream level_file((dataset_path + "/" + level_filename).c_str());
 
   if (!category_file.is_open())
-    cout << "fail to open:" << dataset_path + category_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + category_filename << "\n";
   if (!entity_file.is_open())
-    cout << "fail to open:" << dataset_path + entity_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + entity_filename << "\n";
   if (!entity_ancestor_file.is_open())
-    cout << "fail to open:" << dataset_path + entity_to_ancestor_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + entity_to_ancestor_filename << "\n";
   if (!entity_category_file.is_open())
-    cout << "fail to open:" << dataset_path + entity_to_category_filename << "\n";
-  if (!hierarchy_file.is_open())
-    cout << "fail to open:" << dataset_path + hierarchy_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + entity_to_category_filename << "\n";
   if (!hierarchy_id_file.is_open())
-    cout << "fail to open:" << dataset_path + hierarchy_id_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + hierarchy_id_filename << "\n";
   if (!pair_file.is_open())
-    cout << "fail to open:" << dataset_path + pair_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + pair_filename << "\n";
   if (!level_file.is_open())
-    cout << "fail to open:" << dataset_path + level_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + level_filename << "\n";
 
   // TODO: no need of category_file @hzt
   // 1. Parse Category File
   while (getline(category_file, line)){
     num_category_++;
   }
-  cout << "number of category: " << num_category_ << endl;
   LOG(INFO) << "number of category: " << num_category_;
  
   // 2. Parse Entity File
   while (getline(entity_file, line)){
     num_entity_++;
   }
-  cout << "number of entity: " << num_entity_ << endl;
+  LOG(INFO) << "number of entity: " << num_entity_;
 
   // init category hierarchy
   entity_category_hierarchy_.InitHierarchy(num_entity_, num_category_);
@@ -98,6 +93,8 @@ void EEEngine::ReadData() {
   // category_id = index in nodes_ - num_entity
 
   // 3. Parse entity file
+  LOG(INFO) << "Reading " << entity_to_category_filename;
+  counter = 0;
   while (getline(entity_category_file, line)) {
     istringstream iss(line);
     vector<int> tokens( 
@@ -114,9 +111,15 @@ void EEEngine::ReadData() {
       // add child entity to category @hzt
       entity_category_hierarchy_.node(category_idx)->AddChild(entity_idx);
     }
+    ++counter;
+    if (counter % 20000 == 0) {
+      cout << "." << std::flush;
+    }
   }
+  cout << endl;
 
   // 4. Parse hierarchy_id (category)
+  LOG(INFO) << "Reading " << hierarchy_id_filename;
   while (getline(hierarchy_id_file, line)){
     istringstream iss(line);
     vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
@@ -136,6 +139,7 @@ void EEEngine::ReadData() {
   }
  
   // category levels 
+  LOG(INFO) << "Reading " << level_filename;
   while (getline(level_file, line)){
     istringstream iss(line);
     vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
@@ -145,6 +149,8 @@ void EEEngine::ReadData() {
   }
 
   // 5. Parse entity ancestor File
+  LOG(INFO) << "Reading " << entity_to_ancestor_filename;
+  counter = 0;
   int num_entity_ancetor_file_line = 0;
   while (getline(entity_ancestor_file, line)){
     istringstream iss(line);
@@ -166,7 +172,12 @@ void EEEngine::ReadData() {
     }
 
     ++num_entity_ancetor_file_line;
+    ++counter;
+    if (counter % 20000 == 0) {
+      cout << "." << std::flush;
+    }
   }
+  cout << endl;
 #ifdef DEBUG
   CHECK_EQ(num_entity_ancetor_file_line, num_entity_);
 #endif
@@ -174,6 +185,8 @@ void EEEngine::ReadData() {
   // 6. Parse pair File
   // Remark: current memory allocation is not good, 
   // consider allocate once than assign in future version.
+  LOG(INFO) << "Reading " << pair_filename;
+  counter = 0;
   while (getline(pair_file, line)) {
     istringstream iss(line);
     //vector<int> tokens{istream_iterator<int>{iss},istream_iterator<int>{}};
@@ -191,7 +204,13 @@ void EEEngine::ReadData() {
     train_data_.AddDatum(entity_i, entity_o, count);
     
     num_train_data_++;
+    ++counter;
+    if (counter % 20000 == 0) {
+      cout << "." << std::flush;
+    }
   }
+  cout << endl;
+  
 #ifdef OPENMP
   #pragma omp parallel for
 #endif
@@ -206,14 +225,13 @@ void EEEngine::ReadData() {
 #endif
     train_data_.AddPath(datum->entity_i(), datum->entity_o(), entity_pair_path);
   }
-  cout << "number of training data: " << num_train_data_ << endl;
+  LOG(INFO) << "number of training data: " << num_train_data_ << endl;
 
   // close files
   category_file.close();
   entity_file.close();
   entity_ancestor_file.close();
   entity_category_file.close();
-  hierarchy_file.close();
   hierarchy_id_file.close();
   pair_file.close();
   level_file.close();
