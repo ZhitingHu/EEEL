@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <vector>
 #include "fastapprox/fastsigmoid.h"
 #include "fastapprox/fastexp.h"
 #include "fastapprox/fastlog.h"
@@ -41,5 +42,13 @@ void Softmax(float* vec, int dim);
 void ComputeSoftmaxDelta(const float* output_layer_units,
     int32_t num_output_units, int32_t output_label,
     float* delta_output_layer);
+
+template <class T>
+void FreeVector(std::vector<T*>& delete_vector) {
+  for (int idx = 0; idx < delete_vector.size(); ++idx) {
+    delete delete_vector[idx];
+  }
+  std::vector<T*>().swap(delete_vector);
+}
 
 }  // namespace entity

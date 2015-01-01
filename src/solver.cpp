@@ -452,11 +452,11 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
         // Accumulate entity gradients
 #ifdef DEBUG
         CHECK_GT(entity_grads_.size(), 0);
-#endif    
         //LOG(ERROR) << "[1] check 1 " << datum->entity_i();
         entity_grads_[datum->entity_i()]->CheckNaN();
         //LOG(ERROR) << "[1] check 2";
         datum->entity_i_grad()->CheckNaN();
+#endif    
         //LOG(ERROR) << "[1] accu start";
         entity_grads_[datum->entity_i()]->Accumulate(
             datum->entity_i_grad(), 1.0);

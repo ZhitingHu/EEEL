@@ -20,6 +20,10 @@ namespace entity {
 
   using namespace util;
 
+//TODO
+double expand_time = 0;
+double find_time = 0;
+
   // Constructor
 EEEngine::EEEngine() {
   entity::Context& context = entity::Context::get_instance();
@@ -33,7 +37,6 @@ EEEngine::EEEngine() {
 
 EEEngine::~EEEngine() { }
 
-// Read and parse data
 void EEEngine::ReadData() {
   string line;
   int counter;
@@ -52,24 +55,18 @@ void EEEngine::ReadData() {
   // file streams
   ifstream category_file((dataset_path + "/" + category_filename).c_str());
   ifstream entity_file((dataset_path + "/" + entity_filename).c_str());
-  ifstream entity_ancestor_file((dataset_path + "/" + entity_to_ancestor_filename).c_str());
   ifstream entity_category_file((dataset_path + "/" + entity_to_category_filename).c_str());
   ifstream hierarchy_id_file((dataset_path + "/" + hierarchy_id_filename).c_str());
-  ifstream pair_file((dataset_path + "/" + pair_filename).c_str());
   ifstream level_file((dataset_path + "/" + level_filename).c_str());
 
   if (!category_file.is_open())
     LOG(FATAL) << "fail to open:" << dataset_path + category_filename << "\n";
   if (!entity_file.is_open())
     LOG(FATAL) << "fail to open:" << dataset_path + entity_filename << "\n";
-  if (!entity_ancestor_file.is_open())
-    LOG(FATAL) << "fail to open:" << dataset_path + entity_to_ancestor_filename << "\n";
   if (!entity_category_file.is_open())
     LOG(FATAL) << "fail to open:" << dataset_path + entity_to_category_filename << "\n";
   if (!hierarchy_id_file.is_open())
     LOG(FATAL) << "fail to open:" << dataset_path + hierarchy_id_filename << "\n";
-  if (!pair_file.is_open())
-    LOG(FATAL) << "fail to open:" << dataset_path + pair_filename << "\n";
   if (!level_file.is_open())
     LOG(FATAL) << "fail to open:" << dataset_path + level_filename << "\n";
 
@@ -86,11 +83,12 @@ void EEEngine::ReadData() {
   }
   LOG(INFO) << "number of entity: " << num_entity_;
 
-  // init category hierarchy
+  // Init category hierarchy
   entity_category_hierarchy_.InitHierarchy(num_entity_, num_category_);
 
+  // NOTE:
   // entity_id = index in nodes_;
-  // category_id = index in nodes_ - num_entity
+  // category_id = index in nodes_ - num_entity_
 
   // 3. Parse entity file
   LOG(INFO) << "Reading " << entity_to_category_filename;
@@ -112,7 +110,7 @@ void EEEngine::ReadData() {
       entity_category_hierarchy_.node(category_idx)->AddChild(entity_idx);
     }
     ++counter;
-    if (counter % 20000 == 0) {
+    if (counter % 200000 == 0) {
       cout << "." << std::flush;
     }
   }
@@ -124,7 +122,6 @@ void EEEngine::ReadData() {
     istringstream iss(line);
     vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
     
-    // revised by @hzt
     const int category_idx = tokens[0] + num_entity_;
     Node *category_node 
         = entity_category_hierarchy_.node(category_idx);
@@ -148,93 +145,115 @@ void EEEngine::ReadData() {
     category_node->set_level(tokens[1]);
   }
 
-  // 5. Parse entity ancestor File
-  LOG(INFO) << "Reading " << entity_to_ancestor_filename;
-  counter = 0;
-  int num_entity_ancetor_file_line = 0;
-  while (getline(entity_ancestor_file, line)){
+  ReadEntityAncestorFile(dataset_path + "/" + entity_to_ancestor_filename);
+
+  ReadEntityPairFile(dataset_path + "/" + pair_filename);
+
+  category_file.close();
+  entity_file.close();
+  entity_category_file.close();
+  hierarchy_id_file.close();
+  level_file.close();
+
+  LOG(INFO) << "Data reading done.";
+}
+
+void EEEngine::ReadEntityPairFile(const string& filename) {
+  ifstream pair_file(filename.c_str());
+  if (!pair_file.is_open()) {
+    LOG(FATAL) << "Fail to open " << filename;
+  }
+
+  LOG(INFO) << "Reading " << filename;
+  num_train_data_ = 0;
+  int entity_i, entity_o, count;
+  while (pair_file >> entity_i) {
+    pair_file >> entity_o >> count;
+    train_data_.AddDatum(entity_i, entity_o, count);
+    
+    num_train_data_++;
+    if (num_train_data_ % 1000000 == 0) {
+      cout << "." << flush;
+    }
+  }
+  cout << endl;
+  
+  pair_file.close();
+  LOG(INFO) << "number of training data: " << num_train_data_ << endl;
+}
+
+void EEEngine::ReadEntityAncestorFile(const string& filename) {
+  ifstream ancestor_file(filename.c_str());
+  if (!ancestor_file.is_open()) {
+    LOG(FATAL) << "Fail to open " << filename;
+  }
+
+  LOG(INFO) << "Reading " << filename;
+  int counter = 0;
+  int num_field, entity_id, ancestor_id;
+  float rev_ancestor_weight;
+  while (ancestor_file >> num_field) {
+    ancestor_file >> entity_id;
+
+    map<int, float>* ancestor_weight_map = new map<int, float>;
+    for (int idx = 1; idx < num_field; ++idx) {
+      ancestor_file >> ancestor_id >> rev_ancestor_weight;
+
+      (*ancestor_weight_map)[ancestor_id + num_entity_] 
+          = (1.0 / rev_ancestor_weight);
+    }
+    entity_category_hierarchy_.AddAncestorWeights(
+        entity_id, ancestor_weight_map);
+    
+    counter++;
+    if (counter % 200000 == 0) {
+      cout << "." << flush;
+    }
+  }
+  cout << endl;
+  ancestor_file.close();
+
+#ifdef DEBUG
+  CHECK_EQ(counter, num_entity_);
+#endif
+}
+void EEEngine::ReadEntityAncestorFile_bac(const string& filename) {
+  ifstream ancestor_file(filename.c_str());
+  if (!ancestor_file.is_open()) {
+    LOG(FATAL) << "Fail to open " << filename;
+  }
+
+  LOG(INFO) << "Reading " << filename;
+  int counter = 0;
+  string line;
+  while (getline(ancestor_file, line)){
     istringstream iss(line);
     vector<string> tokens((istream_iterator<string>(iss)), 
         istream_iterator<string>());
-    //743:8.3
-    // entity_idx in heirarchy= entity_id
+    // entity_idx in heirarchy = entity_id
     const int entity_idx = stoi(tokens[0]);
     Node *entity_node = entity_category_hierarchy_.node(entity_idx);
     
-    // revised by @hzt
     map<int, float>* ancestor_weight_map = new map<int, float>;
     for (int idx = 1; idx < tokens.size(); ++idx) {
       vector<string> ancestor_weight_pair = split(tokens[idx], ':');
       const int ancestor_idx = stoi(ancestor_weight_pair[0]) + num_entity_;
       (*ancestor_weight_map)[ancestor_idx] = stof(ancestor_weight_pair[1]);
-      entity_category_hierarchy_.AddAncestorWeights(
-          entity_idx, ancestor_weight_map);
     }
+    entity_category_hierarchy_.AddAncestorWeights(
+        entity_idx, ancestor_weight_map);
 
-    ++num_entity_ancetor_file_line;
     ++counter;
-    if (counter % 20000 == 0) {
+    if (counter % 200000 == 0) {
       cout << "." << std::flush;
     }
   }
   cout << endl;
+  ancestor_file.close();
+
 #ifdef DEBUG
-  CHECK_EQ(num_entity_ancetor_file_line, num_entity_);
+  CHECK_EQ(counter, num_entity_);
 #endif
-  
-  // 6. Parse pair File
-  // Remark: current memory allocation is not good, 
-  // consider allocate once than assign in future version.
-  LOG(INFO) << "Reading " << pair_filename;
-  counter = 0;
-  while (getline(pair_file, line)) {
-    istringstream iss(line);
-    //vector<int> tokens{istream_iterator<int>{iss},istream_iterator<int>{}};
-    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
-
-    // revized by @hzt
-    const int entity_i = tokens[0];
-    const int entity_o = tokens[1];
-    const int count = tokens[2];
-
-    //Path* entity_pair_path 
-    //    = entity_category_hierarchy_.FindPathBetweenEntities(
-    //    entity_i, entity_o);
-    //train_data_.AddDatum(entity_i, entity_o, count, entity_pair_path);
-    train_data_.AddDatum(entity_i, entity_o, count);
-    
-    num_train_data_++;
-    ++counter;
-    if (counter % 20000 == 0) {
-      cout << "." << std::flush;
-    }
-  }
-  cout << endl;
-  
-#ifdef OPENMP
-  #pragma omp parallel for
-#endif
-  for (int d_idx = 0; d_idx < num_train_data_; ++d_idx) {
-    Datum* datum = train_data_.datum(d_idx);
-    Path* entity_pair_path 
-        = entity_category_hierarchy_.FindPathBetweenEntities(
-        datum->entity_i(), datum->entity_o());
-    datum->AddPath(entity_pair_path);
-#ifdef OPENMP
-  #pragma omp critical
-#endif
-    train_data_.AddPath(datum->entity_i(), datum->entity_o(), entity_pair_path);
-  }
-  LOG(INFO) << "number of training data: " << num_train_data_ << endl;
-
-  // close files
-  category_file.close();
-  entity_file.close();
-  entity_ancestor_file.close();
-  entity_category_file.close();
-  hierarchy_id_file.close();
-  pair_file.close();
-  level_file.close();
 }
 
 void EEEngine::ThreadCreateMinibatch(const vector<int>* next_minibatch_data_idx,
@@ -247,6 +266,14 @@ void EEEngine::ThreadCreateMinibatch(const vector<int>* next_minibatch_data_idx,
   for (int d_idx = 0; d_idx < batch_size; ++d_idx) {
     const int data_idx = next_minibatch_data_idx->at(d_idx);
     Datum* datum = train_data_.datum(data_idx);
+
+    // compute path between entity_i and entity_o
+    Path* entity_pair_path 
+        = entity_category_hierarchy_.FindPathBetweenEntities(
+        datum->entity_i(), datum->entity_o());
+    datum->AddPath(entity_pair_path);
+
+    // sample negative entities 
     SampleNegEntities(datum);
     
     (*next_minibatch)[d_idx] = datum;
@@ -256,9 +283,11 @@ void EEEngine::ThreadCreateMinibatch(const vector<int>* next_minibatch_data_idx,
 
 void EEEngine::SampleNegEntities(Datum* datum) {
   const int entity_i = datum->entity_i();
-  const map<int, Path*>& pos_entities 
-      = train_data_.positive_entity_path(entity_i);
+  const set<int>& pos_entities 
+      = train_data_.positive_entities(entity_i);
 
+  //TODO add count
+  //TODO openmp
   for (int neg_sample_idx = 0; neg_sample_idx < num_neg_sample_; 
       ++neg_sample_idx) { 
     // TODO use sophisiticated distribution
@@ -284,8 +313,13 @@ inline void EEEngine::CopyMinibatch(const vector<Datum*>& source,
 
 inline void EEEngine::ClearMinibatch(vector<Datum*>& minibatch) {
   // clear neg samples and related grads
+  //for (int d_idx = 0; d_idx < minibatch.size(); ++d_idx){
+  //  minibatch[d_idx]->ClearNegSamples();
+  //}
+
+  // destroy datum's
   for (int d_idx = 0; d_idx < minibatch.size(); ++d_idx){
-    minibatch[d_idx]->ClearNegSamples();
+    delete minibatch[d_idx];
   }
 }
 
@@ -335,15 +369,31 @@ void EEEngine::Start() {
   thread minibatch_creator;
 
   // create the first minibatch 
-  for (int d_idx = 0; d_idx < workload_mgr.GetBatchSize(); ++d_idx) {
-    int data_idx = workload_mgr.GetDataIdxAndAdvance();
-    Datum* datum = train_data_.datum(data_idx);
-    SampleNegEntities(datum);
+  LOG(INFO) << "Creating first minibtach";
+  //for (int d_idx = 0; d_idx < workload_mgr.GetBatchSize(); ++d_idx) {
+  //  int data_idx = workload_mgr.GetDataIdxAndAdvance();
+  //  Datum* datum = train_data_.datum(data_idx);
 
-    next_minibatch[d_idx] = datum;
-  }
-  
+  //  // 
+  //  Path* entity_pair_path 
+  //      = entity_category_hierarchy_.FindPathBetweenEntities(
+  //      datum->entity_i(), datum->entity_o());
+  //  datum->AddPath(entity_pair_path);
+
+  //  // 
+  //  SampleNegEntities(datum);
+
+  //  next_minibatch[d_idx] = datum;
+  //}  
+  workload_mgr.GetBatchDataIdx(workload_mgr.GetBatchSize(), 
+      next_minibatch_data_idx);
+  ThreadCreateMinibatch(&next_minibatch_data_idx, &next_minibatch);
+  workload_mgr.IncreaseDataIdxByBatchSize();
+  LOG(INFO) << "Create first minibtach done.";
+
   clock_t t_start = clock();
+  double wait_time = 0;
+  double test_time = 0;  
 
   // Train	
   for (int iter = 1; iter <= num_iter; ++iter) {
@@ -364,10 +414,14 @@ void EEEngine::Start() {
 
     // optimize based on current minibatch
     eeel_solver.Solve(minibatch);
+
+    //LOG(INFO) << "SOLVE done.";
     
     ClearMinibatch(minibatch);
 
     if (iter % eval_interval == 0 || iter == 1) {
+      clock_t t_start_test = clock();
+
       float obj = 0;
       int cur_batch_start_idx = workload_mgr.GetDataIdx();
       // get the first test minibatch
@@ -403,12 +457,16 @@ void EEEngine::Start() {
           CopyMinibatch(next_test_minibatch, test_minibatch);
         }
       }
-      
-      obj /= (workload_mgr.GetBatchSize() * num_iter_per_eval); 
+  
+      obj /= (workload_mgr.GetBatchSize() * num_iter_per_eval);
       LOG(ERROR) << iter << "," << obj << "," 
-          << ((double)(clock() - t_start) / CLOCKS_PER_SEC);
+          << ((double)(clock() - t_start) / CLOCKS_PER_SEC) << "," 
+          << wait_time << "," << test_time << "," << find_time << "," << expand_time;
       ++eval_counter;
       test = true;
+
+      test_time += ((double)(clock() - t_start_test) / CLOCKS_PER_SEC);
+      //LOG(INFO) << "test time," << test_time;
     }
     
     if (iter % snapshot == 0) {
@@ -417,8 +475,10 @@ void EEEngine::Start() {
     
     workload_mgr.IncreaseDataIdxByBatchSize();
     if (!test) {
-      //LOG(INFO) << "wait";
+      //LOG(INFO) << "wait " << wait_time;
+      clock_t t_start_wait = clock();
       minibatch_creator.join();
+      wait_time += ((double)(clock() - t_start_wait) / CLOCKS_PER_SEC);
     } else {
       test = false;
     }

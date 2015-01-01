@@ -14,6 +14,8 @@ using namespace std;
 
 namespace entity {
 
+extern double expand_time;
+extern double find_time;
 
 }  // namespace entity
 

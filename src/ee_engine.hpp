@@ -39,12 +39,17 @@ private:    // private functions
   inline void CopyMinibatch(const vector<Datum*>& source, 
       vector<Datum*>& target); 
   inline void ClearMinibatch(vector<Datum*>& minibatch);
-  
+
+  void ReadEntityPairFile(const string& filename); 
+  void ReadEntityAncestorFile(const string& filename); 
+  void ReadEntityAncestorFile_bac(const string& filename); 
+ 
 private:
 
   Dataset train_data_;
-  //Dataset test_data_;
+  Dataset test_data_;
   int num_train_data_;  
+  int num_test_data_;  
 
   Hierarchy entity_category_hierarchy_;
 

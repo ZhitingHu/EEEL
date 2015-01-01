@@ -20,23 +20,22 @@ distance_metric_mode="DIAG";
 
 # training engine parameters
 num_iter=1000
-eval_interval=5
+eval_interval=10
 num_iter_per_eval=10
 batch_size=500
 
 # solver parameters
-learning_rate=0.01
+learning_rate=0.05
 num_neg_sample=10
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-snapshot=200
-openmp=noopenmp
+snapshot=100
 
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_${openmp}-test"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}-new-test-omp"
 #rm -rf ${output_dir}
 mkdir -p ${output_dir}
 log_dir=${output_dir}/logs
@@ -63,6 +62,5 @@ GLOG_vmodule="" \
     --num_epoch_on_batch $num_epoch_on_batch \
     --num_iter_on_entity $num_iter_on_entity \
     --num_iter_on_category $num_iter_on_category \
-    --${openmp} \
     --dataset_path $dataset_path \
     --output_file_prefix $output_dir

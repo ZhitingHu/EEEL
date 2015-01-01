@@ -15,6 +15,7 @@ public:
 
   ~Path() {
     vector<int>().swap(category_nodes_);
+    category_node_weights_.clear();
     delete aggr_dist_metric_; 
   };
   
@@ -30,12 +31,16 @@ public:
   }
 
   void AddCategoryNode(const int category_id, const float weight) {
+//#ifdef DEBUG
+//    CHECK(category_node_weights_.find(category_id) 
+//        == category_node_weights_.end());
+//#endif
 #ifdef DEBUG
-    CHECK(category_node_weights_.find(category_id) 
-        == category_node_weights_.end());
+    CHECK(category_node_add_times_[category_id] < 2);
+    category_node_add_times_[category_id]++;
 #endif
     category_nodes_.push_back(category_id);
-    category_node_weights_[category_id] = weight;
+    category_node_weights_[category_id] += weight;
   }
 
   void ScaleCategoryWeights(const float scale) {
@@ -45,13 +50,13 @@ public:
     }
   }
 
-  void IncCategoryNodeWeight(const int category_id, const int weight = 1) {
-#ifdef DEBUG
-    CHECK(category_node_weights_.find(category_id) 
-        != category_node_weights_.end());
-#endif
-    category_node_weights_[category_id] += weight;
-  }
+  //void IncCategoryNodeWeight(const int category_id, const int weight = 1) {
+  //#ifdef DEBUG
+  //  CHECK(category_node_weights_.find(category_id) 
+  //      != category_node_weights_.end());
+  //#endif
+  //  category_node_weights_[category_id] += weight;
+  //}
 
   vector<int>& category_nodes() { return category_nodes_; }
   const Blob* aggr_dist_metric() const { return aggr_dist_metric_; }
@@ -61,6 +66,10 @@ private:
   vector<int> category_nodes_;
   // category_id => weight in the path
   map<int, float> category_node_weights_;
+
+#ifdef DEBUG
+  map<int, int> category_node_add_times_;
+#endif
 
   // aggregrated distance metrix
   Blob* aggr_dist_metric_;

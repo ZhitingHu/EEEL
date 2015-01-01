@@ -3,6 +3,7 @@
 
 #include "blob.hpp"
 #include "path.hpp"
+#include "util.hpp"
 #include <vector>
 #include <map>
 #include <stdint.h>
@@ -26,34 +27,44 @@ public:
     }
   };
 
-  Datum(const int entity_i, const int entity_o, const int count, 
-      Path* path, const int num_neg_sample) : entity_i_(entity_i), 
-      entity_o_(entity_o), count_(count), category_path_(path), 
-      category_path_nodes_(&path->category_nodes()) {
-    entity_i_grad_ = new Blob(entity::Context::dim_embedding());
-    entity_o_grad_ = new Blob(entity::Context::dim_embedding());  
+  //Datum(const int entity_i, const int entity_o, const int count, 
+  //    Path* path, const int num_neg_sample) : entity_i_(entity_i), 
+  //    entity_o_(entity_o), count_(count), category_path_(path) {
+  //  entity_i_grad_ = new Blob(entity::Context::dim_embedding());
+  //  entity_o_grad_ = new Blob(entity::Context::dim_embedding());  
 
-    neg_entity_id_.resize(num_neg_sample);
-    neg_entity_grads_.resize(num_neg_sample);
-    for (int i = 0; i < num_neg_sample; ++i) {
-      neg_entity_grads_[i] = new Blob(entity::Context::dim_embedding());
-    }
-    //positive_path_size = category_path_->category_nodes().size()
-    //for (int i = 0; i < positive_path_size; ++i) {
-    //  category_grads_.push_back(new Blob(
-    //      entity::Context::dim_embedding(), entity::Context::dim_embedding()));
-    //}
-    ClearNegSamples();
-  };
+  //  neg_entity_id_.resize(num_neg_sample);
+  //  neg_entity_grads_.resize(num_neg_sample);
+  //  for (int i = 0; i < num_neg_sample; ++i) {
+  //    neg_entity_grads_[i] = new Blob(entity::Context::dim_embedding());
+  //  }
+  //  ClearNegSamples();
+  //};
 
   ~Datum() {
-     // TODO  
+    vector<int>().swap(neg_entity_id_);
+    //vector<Path*>().swap(neg_category_paths_);
+    //vector<Blob*>().swap(category_grads_);
+    //vector<Blob*>().swap(neg_entity_grads_);
+    FreeVector<Path>(neg_category_paths_);
+    FreeVector<Blob>(category_grads_);
+    FreeVector<Blob>(neg_entity_grads_);
+    category_index_.clear();
+    delete category_path_;
+    delete entity_i_grad_;
+    delete entity_o_grad_;
   };
   
   void AddPath(Path* path) {
     category_path_ = path; 
-    category_path_nodes_ = &(path->category_nodes());
-    ClearNegSamples();
+
+    //ClearNegSamples();
+    const vector<int>& category_path_nodes = category_path_->category_nodes();
+    for (int c_idx = 0; c_idx < category_path_nodes.size(); ++c_idx) {
+      category_index_[category_path_nodes[c_idx]] = c_idx;
+      category_grads_.push_back(new Blob(
+          entity::Context::dim_embedding(), entity::Context::dim_embedding()));
+    }
   }
 
   const int entity_i() { return entity_i_; }
@@ -67,20 +78,21 @@ public:
    return category_path_; 
   }
   
-  void ClearNegSamples() {
-    vector<Path*>().swap(neg_category_paths_);
-    vector<Blob*>().swap(category_grads_);
-    category_index_.clear();
-    
-    for (int i = 0; i < neg_entity_grads_.size(); ++i) {
-      neg_entity_grads_[i]->ClearData();
-    }
-    for (int c_idx = 0; c_idx < category_path_nodes_->size(); ++c_idx) {
-      category_index_[category_path_nodes_->at(c_idx)] = c_idx;
-      category_grads_.push_back(new Blob(
-          entity::Context::dim_embedding(), entity::Context::dim_embedding()));
-    }
-  }
+  //void ClearNegSamples() {
+  //  vector<Path*>().swap(neg_category_paths_);
+  //  vector<Blob*>().swap(category_grads_);
+  //  category_index_.clear();
+  //  
+  //  for (int i = 0; i < neg_entity_grads_.size(); ++i) {
+  //    neg_entity_grads_[i]->ClearData();
+  //  }
+  //  const vector<int>& category_path_nodes = category_path_->category_nodes();
+  //  for (int c_idx = 0; c_idx < category_path_nodes.size(); ++c_idx) {
+  //    category_index_[category_path_nodes[c_idx]] = c_idx;
+  //    category_grads_.push_back(new Blob(
+  //        entity::Context::dim_embedding(), entity::Context::dim_embedding()));
+  //  }
+  //}
 
   /// used in optimization 
   void AddNegSample(int neg_idx, int neg_entity_id, Path* path) {
@@ -128,14 +140,17 @@ public:
   const map<int, int>& category_index() { return category_index_; }
 
 private: 
-  /// 
+
+  /// Observed data 
+  
   int entity_i_;
   int entity_o_;
   int count_;
   Path* category_path_;
-  vector<int>* category_path_nodes_;
 
-  /// used in optimization 
+
+  /// Used in optimization 
+
   Blob* entity_i_grad_;
   Blob* entity_o_grad_;  
   
@@ -145,7 +160,7 @@ private:
   vector<Path*> neg_category_paths_;
   vector<Blob*> neg_entity_grads_;
 
-  // category_id => index in category_grad_
+  // category_id => index in category_grads_
   // Note: includes categories in BOTH category_path_ and neg_category_paths_
   //   Clear it whenever negative sampling, and re-insert categories in 
   //   category_path_ 

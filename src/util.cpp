@@ -78,4 +78,5 @@ void ComputeSoftmaxDelta(const float* output_layer_units,
   }
 }
 
+
 }  // namespace entity

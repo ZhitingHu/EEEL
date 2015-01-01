@@ -31,6 +31,7 @@ public:
       nodes_.push_back(node);
     }
     entity_ancestor_weights_.resize(num_entity);
+    entity_ancestor_hierarchies_.resize(num_entity);
   };
   
   //void SetNodeLevel(int idx, int level){
@@ -40,8 +41,38 @@ public:
   Node* node(int idx) { return nodes_[idx]; }
 
 
-  void AddAncestorWeights(int entity_id, map<int, float>* ancestor_weight_map) {
+  void AddAncestorWeights(const int entity_id, 
+      map<int, float>* ancestor_weight_map) {
     entity_ancestor_weights_[entity_id] = ancestor_weight_map;
+
+    // build entity's ancestor hierarchy
+    map<int, vector<int> >* ancestor_hierarchy = new map<int, vector<int> >;
+    map<int, float>::const_iterator it = ancestor_weight_map->begin();
+    for (; it != ancestor_weight_map->end(); ++it) {
+      const vector<int>& parents = nodes_[it->first]->parent_idx();
+      for (int p_idx_i = 0; p_idx_i < parents.size(); ++p_idx_i) {
+        const int p_idx = parents[p_idx_i];
+        if (ancestor_weight_map->find(p_idx) != ancestor_weight_map->end()) {
+          (*ancestor_hierarchy)[p_idx].push_back(it->first);
+        }
+      }
+    }
+   
+    //map<int, vector<int>* >* ancestor_hierarchy = new map<int, vector<int>* >;
+    //map<int, float>::const_iterator it = ancestor_weight_map->begin();
+    //for (; it != ancestor_weight_map->end(); ++it) {
+    //  vector<int>* 
+    //  const vector<int>& all_children = nodes_[it->first]->child_idx();
+    //  for (int c_idx_i = 0; c_idx_i < all_children.size(); ++c_idx_i) {
+    //    const int child_idx = all_children[c_idx_i];
+    //    if (ancestor_weight_map->find(child_idx) != ancestor_weight_map->end()){
+    //     
+    //    }
+    //  }
+    //  
+    //}
+
+    entity_ancestor_hierarchies_[entity_id] = ancestor_hierarchy;
   }
 
 private:
@@ -53,6 +84,9 @@ private:
   //    map<int, int>& entity_to_ancestor_weights,
   //    set<int>& common_ancestors);
 
+  void ExpandPathFromCommonAncestors(const int entity_idx,
+      const set<int>& common_ancestors, Path* path, float& weight_sum);
+
 private:
   // [0, num_entity): entity nodes
   // [num_entity, num_entity + num_category): category nodes
@@ -61,8 +95,12 @@ private:
   vector<Node*> nodes_;
  
   // dim = num_entity
-  // Each entry map<int, float> is ancestor_category_id => weight
-  vector< map<int, float>* > entity_ancestor_weights_;
+  // each entry map<int, float> is: ancestor_category_idx => weight
+  vector<map<int, float>* > entity_ancestor_weights_;
+  // dim = num_entity
+  // each entry map<int, vector<int> > is: 
+  // ancestor_category_idx => child category idx of entity's ancestor
+  vector<map<int, vector<int> >* > entity_ancestor_hierarchies_; 
 
   int num_entity_;
   int num_category_;
