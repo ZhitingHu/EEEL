@@ -38,22 +38,21 @@ Solver::Solver(const int num_entity, const int num_category) :
   num_epoch_on_batch_ = context.get_int32("num_epoch_on_batch");
   num_iter_on_entity_ = context.get_int32("num_iter_on_entity");
   num_iter_on_category_ = context.get_int32("num_iter_on_category");
-  openmp_ = context.get_bool("openmp");
 
-  if (!openmp_) {
-    for (int i = 0; i < num_entity_; ++i) {
-      entity_grads_.push_back(new Blob(entity::Context::dim_embedding()));
-    }
-    for (int i = 0; i < num_category_; ++i) {
-      category_grads_.push_back(new Blob(
-          entity::Context::dim_embedding(), entity::Context::dim_embedding()));
-    }
+//#ifndef OPENMP    
+  for (int i = 0; i < num_entity_; ++i) {
+    entity_grads_.push_back(new Blob(entity::Context::dim_embedding()));
   }
+  for (int i = 0; i < num_category_; ++i) {
+    category_grads_.push_back(new Blob(
+        entity::Context::dim_embedding(), entity::Context::dim_embedding()));
+  }
+//#endif
 }
 
 Solver::~Solver() {
-  std::vector<Blob*>().swap(entities_);
-  std::vector<Blob*>().swap(categories_);
+  FreeVector<Blob>(entities_);
+  FreeVector<Blob>(categories_);
 }
 	
 void Solver::RandInit() {
@@ -87,25 +86,30 @@ void Solver::RandInit() {
 }
 
 void Solver::Snapshot(const string& output_path, const int iter) {
-  LOG(ERROR) << "Snapshoting to " << output_path << " iter=" << iter;
+  LOG(INFO) << "Snapshoting to " << output_path << " iter=" << iter;
 
   ostringstream oss;
-  oss << output_path << "/parameter_" << iter;
+  oss << output_path << "/solver_parameter_" << iter;
   SnapshotParameters(oss.str());
 
   oss.str("");
   oss.clear();
   oss << output_path << "/entity_vectors_" << iter;
-  SnapshotBlobs(oss.str(), entities_);  
+  SnapshotBlobsBinary(oss.str(), entities_);  
 
   oss.str("");
   oss.clear();
   oss << output_path << "/category_vectors_" << iter;
-  SnapshotBlobs(oss.str(), categories_);  
+  SnapshotBlobsBinary(oss.str(), categories_);  
 }
 
 void Solver::SnapshotParameters(const string& param_filename) {
-  //TODO
+  ofstream param_snapshot;
+  param_snapshot.open(param_filename.c_str());
+  param_snapshot << dim_embedding_ << endl;
+  param_snapshot << num_entity_ << endl;
+  param_snapshot << num_category_ << endl;   
+  param_snapshot.close();
 }
 
 /**
@@ -132,36 +136,83 @@ void Solver::SnapshotBlobs(const string& blobs_filename, const vector<Blob*>& bl
   blob_snapshot.close();
 }
 
+void Solver::SnapshotBlobsBinary(const string& blobs_filename, 
+    const vector<Blob*>& blobs) {
+#ifdef DEBUG
+  CHECK_GT(blobs.size(), 0);
+#endif
+  ofstream blob_snapshot;
+  blob_snapshot.open(blobs_filename.c_str(), ios::out | ios::binary);
+  // meta info
+  int value = blobs[0]->count();
+  blob_snapshot.write((char*)&value, sizeof(int));
+  value = blobs[0]->num_row();
+  blob_snapshot.write((char*)&value, sizeof(int));
+  value = blobs[0]->num_col();
+  blob_snapshot.write((char*)&value, sizeof(int));
+  // embedding 
+  for (int idx = 0; idx < blobs.size(); ++idx) {
+    const float* blob_data = blobs[idx]->data();
+    for (int d_idx = 0; d_idx < blobs[idx]->count(); ++d_idx) {
+      blob_snapshot.write((const char*)(blob_data + d_idx), sizeof(float));
+    }
+  }  
+  blob_snapshot.close();
+}
+
 void Solver::Restore(const string& snapshot_path, const int iter) {
-  LOG(ERROR) << "Restoring from "<< snapshot_path << " iter=" << iter;
+  LOG(INFO) << "Restoring from "<< snapshot_path << " iter=" << iter;
 
   ostringstream oss;
-  oss << snapshot_path << "/parameter_" << iter;
+  oss << snapshot_path << "/solver_parameter_" << iter;
   RestoreParameters(oss.str());
+  LOG(INFO) << "Restoring: number of entities: " << num_entity_;
+  LOG(INFO) << "Restoring: number of categories: " << num_category_;
+  LOG(INFO) << "Restoring: dimension of embedding: " << dim_embedding_;
+  CHECK_GT(num_entity_, 0);
+  CHECK_GT(num_category_, 0);
+  CHECK_GT(dim_embedding_, 0);
 
   oss.str("");
   oss.clear();
   oss << snapshot_path << "/entity_vectors_" << iter;
-  RestoreBlobs(oss.str(), entities_);  
-  // temp, should be initialized in RestoreParameters()
-  num_entity_ = entities_.size();
-  LOG(ERROR) << "number of entities: " << num_entity_;   
+  //RestoreBlobs(oss.str(), entities_);  
+  RestoreBlobsBinary(oss.str(), num_entity_, entities_);  
+  CHECK_EQ(num_entity_, entities_.size());
 
   oss.str("");
   oss.clear();
   oss << snapshot_path << "/category_vectors_" << iter;
-  RestoreBlobs(oss.str(), categories_);  
-  // temp, should be initialized in RestoreParameters()
-  num_category_ = categories_.size();
-  LOG(ERROR) << "number of categories: " << num_category_;   
+  //RestoreBlobs(oss.str(), categories_);  
+  RestoreBlobsBinary(oss.str(), num_category_, categories_);  
+  CHECK_EQ(num_category_, categories_.size());
 }
 
 void Solver::RestoreParameters(const string& param_filename) {
-  //TODO
+  LOG(INFO) << "Restoring from "<< param_filename;
+
+  ifstream param_snapshot(param_filename);
+  if (!param_snapshot.is_open()) {
+    LOG(FATAL) << "fail to open:" << param_filename;
+  }
+  int dim_embedding, num_entity, num_category;
+  param_snapshot >> dim_embedding;
+  dim_embedding_ = (dim_embedding_ == -1 ? dim_embedding : dim_embedding_);
+  CHECK_EQ(dim_embedding, dim_embedding_) << " dim_embedding not consistent!";
+
+  param_snapshot >> num_entity;
+  num_entity_ = (num_entity_ == -1 ? num_entity : num_entity_);
+  CHECK_EQ(num_entity, num_entity_) << " num_entity not consistent!";
+
+  param_snapshot >> num_category;   
+  num_category_ = (num_category_ == -1 ? num_category : num_category_);
+  CHECK_EQ(num_category, num_category_) << " num_category not consistent!";
+  
+  param_snapshot.close();
 }
 
 void Solver::RestoreBlobs(const string& blobs_filename, vector<Blob*>& blobs) {
-  LOG(ERROR) << "Restoring from " << blobs_filename;
+  LOG(INFO) << "Restoring from " << blobs_filename;
 
   ifstream blobs_snapshot(blobs_filename);
   string line;
@@ -170,7 +221,7 @@ void Solver::RestoreBlobs(const string& blobs_filename, vector<Blob*>& blobs) {
   istringstream header_iss(line);
   int count, num_row, num_col;
   header_iss >> count >> num_row >> num_col;
-  LOG(ERROR) << count << " " << num_row << " " << num_col;
+  LOG(INFO) << count << " " << num_row << " " << num_col;
 
   // line 2-
   while (getline(blobs_snapshot, line)) {
@@ -187,12 +238,38 @@ void Solver::RestoreBlobs(const string& blobs_filename, vector<Blob*>& blobs) {
   blobs_snapshot.close();
 }
 
-const float Solver::ComputeObjective(const vector<Datum*>& val_batch) {
-  if (openmp_) {
-    return ComputeObjective_omp(val_batch);
-  } else {
-    return ComputeObjective_single(val_batch);
+void Solver::RestoreBlobsBinary(const string& blobs_filename, 
+   const int num_blob, vector<Blob*>& blobs) {
+  LOG(INFO) << "Restoring from " << blobs_filename;
+
+  ifstream blobs_snapshot(blobs_filename, ios::in | ios::binary);
+  // meta info
+  int count, num_row, num_col;
+  blobs_snapshot.read((char*)&count, sizeof(count));
+  blobs_snapshot.read((char*)&num_row, sizeof(num_row));
+  blobs_snapshot.read((char*)&num_col, sizeof(num_col));
+  LOG(INFO) << "blob dimension: " << count << " " << num_row << " " << num_col;
+
+  // embedding
+  float value = 0;
+  for (int b_idx = 0; b_idx < num_blob; ++b_idx) {
+    Blob* blob = new Blob(num_row, num_col);
+    for (int dim_idx = 0; dim_idx < count; ++dim_idx) {
+      blobs_snapshot.read((char*)&value, sizeof(value));
+      blob->mutable_data()[dim_idx] = value;
+    }
+    blobs.push_back(blob);
   }
+
+  blobs_snapshot.close();
+}
+
+const float Solver::ComputeObjective(const vector<Datum*>& val_batch) {
+//#ifdef OPENMP
+//  return ComputeObjective_omp(val_batch);
+//#else
+  return ComputeObjective_single(val_batch);
+//#endif
 }
 
 const float Solver::ComputeObjective_single(const vector<Datum*>& val_batch) {
@@ -218,7 +295,6 @@ const float Solver::ComputeObjective_single(const vector<Datum*>& val_batch) {
     CHECK(!isnan(datum_obj));
 #endif
     }
-    float tmp = obj;
     obj += datum_obj;
 #ifdef DEBUG
     if (isnan(obj)) {
@@ -413,11 +489,11 @@ void Solver::ComputeCategoryGradient(Datum* datum) {
 }
 
 void Solver::Solve(const vector<Datum*>& minibatch) {
-  if (openmp_) {
-    Solve_omp(minibatch);
-  } else {
-    Solve_single(minibatch);
-  }
+//#ifdef OPENMP
+//  Solve_omp(minibatch);
+//#else
+  Solve_single(minibatch);
+//#endif
 }
 
 // Note: _single has different pipeline with _omp
@@ -546,10 +622,13 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
     } // end of optimizing category embedding 
     //LOG(ERROR) << "optimize cate vector done."; 
   } // end of epoches
+  
+  updated_entities_.clear();
+  updated_categories_.clear();
 }
 
 void Solver::Solve_omp(const vector<Datum*>& minibatch) {
-  LOG(FATAL) << "Do not support opemmp.";
+  LOG(FATAL) << "Do not support openmp.";
 #ifdef DEBUG
   CHECK(minibatch.size() != 0);
 #endif

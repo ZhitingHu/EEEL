@@ -22,9 +22,10 @@ DEFINE_string(distance_metric_mode, "DIAG", "");
 DEFINE_int32(num_iter, 1, "Number of iteration.");
 DEFINE_int32(eval_interval, 1, "Number of iteration between two evaluations");
 DEFINE_int32(num_iter_per_eval, 1, "Number of iteration per evaluation");
-//DEFINE_int32(num_batch_per_epoch, 50, "Number of batch per epoch");
 DEFINE_int32(batch_size, 50, "Size of batch");
 DEFINE_int32(snapshot, 50, "Number of iterations between two snapshots");
+DEFINE_string(resume_path, "", "Results to be resumed");
+DEFINE_int32(resume_iter, -1, "Iteration of results");
 
 // Parameter Server (not used)
 DEFINE_int32(client_id, 0, "Client ID");

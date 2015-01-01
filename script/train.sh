@@ -8,20 +8,23 @@ progname=ee_main
 prog_path=${app_dir}/build/tools/${progname}
 
 # Data
-dataset_name=whole_parsed
-#dataset_name=tech_parsed
+#dataset_name=whole_parsed
+dataset_name=tech_parsed
 #dataset_name=apple
-dataset_path="${app_dir}/data/${dataset_name}"
+dataset_path="${app_dir}/../../EEEL/data/${dataset_name}"
 
+#========================
 ## Parameters
+#========================
+
 # embedding
 dim_embedding=50;
 distance_metric_mode="DIAG";
 
 # training engine parameters
-num_iter=1000
-eval_interval=10
-num_iter_per_eval=10
+num_iter=100
+eval_interval=50
+num_iter_per_eval=20
 batch_size=500
 
 # solver parameters
@@ -30,12 +33,16 @@ num_neg_sample=10
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-snapshot=100
+snapshot=50
+resume_path="${app_dir}/output/eeel_tech_parsed_D50_MDIAG_lr0.05_N10_B500"
+resume_iter=50
+
+#===========================
 
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}-new-test-omp"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}"
 #rm -rf ${output_dir}
 mkdir -p ${output_dir}
 log_dir=${output_dir}/logs
@@ -63,4 +70,7 @@ GLOG_vmodule="" \
     --num_iter_on_entity $num_iter_on_entity \
     --num_iter_on_category $num_iter_on_category \
     --dataset_path $dataset_path \
-    --output_file_prefix $output_dir
+    --output_file_prefix $output_dir \
+    --snapshot $snapshot \
+    #--resume_path $resume_path \
+    #--resume_iter $resume_iter

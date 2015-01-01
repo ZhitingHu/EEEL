@@ -76,7 +76,6 @@ public:
 #endif
     const float* source_data = source->data();
     for (int idx = 0; idx < count_; ++idx) {
-      const float tmp = data_[idx]; //TODO
       data_[idx] += source_data[idx] * coeff;
 #ifdef DEBUG
     if (isnan(data_[idx])) {

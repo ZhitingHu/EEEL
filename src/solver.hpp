@@ -14,7 +14,7 @@ namespace entity {
 class Solver {
 public:
   Solver(const int num_entity, const int num_category);
-  Solver() {}
+  Solver(): num_entity_(-1), num_category_(-1), dim_embedding_(-1) {}
 
   ~Solver();
   
@@ -60,8 +60,12 @@ private:
 
   void SnapshotParameters(const string& param_filename);
   void SnapshotBlobs(const string& blobs_filename, const vector<Blob*>& blobs);
+  void SnapshotBlobsBinary(const string& blobs_filename, const vector<Blob*>& blobs);
+
   void RestoreParameters(const string& param_filename);
   void RestoreBlobs(const string& blobs_filename, vector<Blob*>& blobs);
+  void RestoreBlobsBinary(const string& blobs_filename, const int num_blob, 
+      vector<Blob*>& blobs);
 
 private:
   vector<Blob*> entities_;
@@ -74,7 +78,8 @@ private:
   set<int> updated_categories_;
   set<int>::const_iterator set_it_;
   map<int, int>::const_iterator map_it_;
-  
+ 
+  // 
   int num_entity_;
   int num_category_;
 
@@ -85,7 +90,6 @@ private:
   int num_iter_on_entity_;
   int num_iter_on_category_;
   int snapshot_;
-  bool openmp_;
 };
 
 }  // namespace entity

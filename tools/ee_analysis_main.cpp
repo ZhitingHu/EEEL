@@ -20,8 +20,8 @@ DEFINE_string(distance_metric_mode, "DIAG", "");
 DEFINE_int32(num_neg_sample, 50, "");
 
 // Results
-DEFINE_string(snapshot_path, "output/", "Results to be analyzed");
-DEFINE_int32(snapshot_iter, 100, "Iteration of results");
+DEFINE_string(resume_path, "output/", "Results to be analyzed");
+DEFINE_int32(resume_iter, 100, "Iteration of results");
 // Data
 DEFINE_string(dataset_path, "data/tech/", "data path");
 DEFINE_string(output_file_prefix, "output/", "Results go here.");
@@ -35,11 +35,12 @@ DEFINE_string(pair_filename, "pair.txt", "pair id filename");
 DEFINE_string(level_filename, "level.txt", "category level filename");
 
 int main(int argc, char *argv[]) {
+  FLAGS_alsologtostderr = 1;
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
 
   entity::Context::set_phase(entity::Context::ANALYZE);
-  entity::Analyst analyst(FLAGS_snapshot_path, FLAGS_snapshot_iter);
+  entity::Analyst analyst(FLAGS_resume_path, FLAGS_resume_iter);
   analyst.ComputeNearestNeibors(100, FLAGS_output_file_prefix);
 
   LOG(ERROR) << "Done."; 

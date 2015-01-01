@@ -43,9 +43,6 @@ public:
 
   ~Datum() {
     vector<int>().swap(neg_entity_id_);
-    //vector<Path*>().swap(neg_category_paths_);
-    //vector<Blob*>().swap(category_grads_);
-    //vector<Blob*>().swap(neg_entity_grads_);
     FreeVector<Path>(neg_category_paths_);
     FreeVector<Blob>(category_grads_);
     FreeVector<Blob>(neg_entity_grads_);

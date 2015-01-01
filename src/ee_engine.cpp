@@ -337,13 +337,20 @@ void EEEngine::Start() {
   const int snapshot = context.get_int32("snapshot");
   const float learning_rate = context.get_double("learning_rate");
   const string& output_file_prefix = context.get_string("output_file_prefix"); 
+  const string& resume_path = context.get_string("resume_path");
+  const int resume_iter = context.get_int32("resume_iter");
 
   int eval_counter = 0;
-  int data_idx = 0;
 
   // EEEL solver initialization
   Solver eeel_solver(num_entity_, num_category_);
-  eeel_solver.RandInit();
+  if (resume_path.length() > 0) {
+    LOG(INFO) << "Resume from " << resume_path;
+    CHECK_GE(resume_iter, 0);
+    eeel_solver.Restore(resume_path, resume_iter);
+  } else {
+    eeel_solver.RandInit();
+  }
 
   // workload manager configuration
   WorkloadManagerConfig workload_mgr_config;
@@ -368,35 +375,23 @@ void EEEngine::Start() {
   bool test = false;
   thread minibatch_creator;
 
-  // create the first minibatch 
-  LOG(INFO) << "Creating first minibtach";
-  //for (int d_idx = 0; d_idx < workload_mgr.GetBatchSize(); ++d_idx) {
-  //  int data_idx = workload_mgr.GetDataIdxAndAdvance();
-  //  Datum* datum = train_data_.datum(data_idx);
-
-  //  // 
-  //  Path* entity_pair_path 
-  //      = entity_category_hierarchy_.FindPathBetweenEntities(
-  //      datum->entity_i(), datum->entity_o());
-  //  datum->AddPath(entity_pair_path);
-
-  //  // 
-  //  SampleNegEntities(datum);
-
-  //  next_minibatch[d_idx] = datum;
-  //}  
+  // skip initial minibatches
+  for (int skip_idx = 0; skip_idx < resume_iter; ++skip_idx) {
+    workload_mgr.IncreaseDataIdxByBatchSize();
+  }
+  // create the first minibatch
   workload_mgr.GetBatchDataIdx(workload_mgr.GetBatchSize(), 
       next_minibatch_data_idx);
   ThreadCreateMinibatch(&next_minibatch_data_idx, &next_minibatch);
   workload_mgr.IncreaseDataIdxByBatchSize();
-  LOG(INFO) << "Create first minibtach done.";
 
   clock_t t_start = clock();
   double wait_time = 0;
   double test_time = 0;  
 
-  // Train	
-  for (int iter = 1; iter <= num_iter; ++iter) {
+  // Train
+  const int start_iter = (resume_iter > 1 ? resume_iter : 1); 	
+  for (int iter = start_iter; iter <= num_iter; ++iter) {
     // get current minibatch from pre-computed one
     CopyMinibatch(next_minibatch, minibatch);
     // pre-compute next minibatch
@@ -419,7 +414,7 @@ void EEEngine::Start() {
     
     ClearMinibatch(minibatch);
 
-    if (iter % eval_interval == 0 || iter == 1) {
+    if (iter % eval_interval == 0 || iter == start_iter) {
       clock_t t_start_test = clock();
 
       float obj = 0;
@@ -461,7 +456,7 @@ void EEEngine::Start() {
       obj /= (workload_mgr.GetBatchSize() * num_iter_per_eval);
       LOG(ERROR) << iter << "," << obj << "," 
           << ((double)(clock() - t_start) / CLOCKS_PER_SEC) << "," 
-          << wait_time << "," << test_time << "," << find_time << "," << expand_time;
+          << wait_time << "," << test_time; //<< "," << find_time << "," << expand_time;
       ++eval_counter;
       test = true;
 
@@ -469,7 +464,7 @@ void EEEngine::Start() {
       //LOG(INFO) << "test time," << test_time;
     }
     
-    if (iter % snapshot == 0) {
+    if (iter % snapshot == 0 && iter > start_iter) {
       eeel_solver.Snapshot(output_file_prefix, iter);
     }
     

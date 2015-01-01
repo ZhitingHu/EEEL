@@ -11,13 +11,13 @@ namespace entity {
 Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
   set<int> common_ancestors;
   
-  clock_t t_start = clock();
+  //clock_t t_start = clock();
 
   FindCommonAncestors(entity_from, entity_to, common_ancestors); 
 
   //LOG(INFO) << "find common ancestor: "
   //    << ((double)(clock() - t_start) / CLOCKS_PER_SEC);
-  find_time += ((double)(clock() - t_start) / CLOCKS_PER_SEC);
+  //find_time += ((double)(clock() - t_start) / CLOCKS_PER_SEC);
 
   int num_ca = common_ancestors.size();
 #ifdef DEBUG
@@ -40,7 +40,7 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
   CHECK_GT(num_ca, 0);
 #endif
 
-  t_start = clock(); 
+  //t_start = clock(); 
 
   Path* path = new Path();
   float weight_sum = 0;
@@ -111,7 +111,7 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 
   //LOG(INFO) << "expand common ancestor: "
   //    << ((double)(clock() - t_start) / CLOCKS_PER_SEC);
-  expand_time += ((double)(clock() - t_start) / CLOCKS_PER_SEC);
+  //expand_time += ((double)(clock() - t_start) / CLOCKS_PER_SEC);
 
   return path;
 }
