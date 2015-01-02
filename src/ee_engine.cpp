@@ -146,6 +146,7 @@ void EEEngine::ReadData() {
   }
 
   ReadEntityAncestorFile(dataset_path + "/" + entity_to_ancestor_filename);
+  //ReadEntityAncestorFile_bac(dataset_path + "/" + entity_to_ancestor_filename);
 
   ReadEntityPairFile(dataset_path + "/" + pair_filename);
 
@@ -232,7 +233,7 @@ void EEEngine::ReadEntityAncestorFile_bac(const string& filename) {
         istream_iterator<string>());
     // entity_idx in heirarchy = entity_id
     const int entity_idx = stoi(tokens[0]);
-    Node *entity_node = entity_category_hierarchy_.node(entity_idx);
+    //Node *entity_node = entity_category_hierarchy_.node(entity_idx);
     
     map<int, float>* ancestor_weight_map = new map<int, float>;
     for (int idx = 1; idx < tokens.size(); ++idx) {
@@ -335,7 +336,6 @@ void EEEngine::Start() {
   const int eval_interval = context.get_int32("eval_interval");
   const int num_iter_per_eval = context.get_int32("num_iter_per_eval");
   const int snapshot = context.get_int32("snapshot");
-  const float learning_rate = context.get_double("learning_rate");
   const string& output_file_prefix = context.get_string("output_file_prefix"); 
   const string& resume_path = context.get_string("resume_path");
   const int resume_iter = context.get_int32("resume_iter");

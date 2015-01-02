@@ -4,7 +4,7 @@ PROJECT := eeel
 # comment it to avoid omp
 OPENMP = 1
 # comment it to speedup
-#DEBUG = 1
+DEBUG = 1
 # comment it if use double
 USEFLOAT = 1
 

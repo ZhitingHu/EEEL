@@ -78,9 +78,6 @@ public:
     for (int idx = 0; idx < count_; ++idx) {
       data_[idx] += source_data[idx] * coeff;
 #ifdef DEBUG
-    if (isnan(data_[idx])) {
-      LOG(ERROR) << data_[idx] << " = " << tmp << " + " << source_data[idx] << " * " << coeff;
-    }
     CHECK(!isnan(data_[idx]));
 #endif
     }  

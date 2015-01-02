@@ -24,10 +24,17 @@ public:
       aggr_dist_metric_ = new Blob(
           entity::Context::dim_embedding(), entity::Context::dim_embedding());
     } else {  
-      //aggr_dist_metric_->ClearData();
+      aggr_dist_metric_->ClearData();
     }
     for (int c_idx = 0; c_idx < category_nodes_.size(); ++c_idx) {
-      aggr_dist_metric_->Accumulate(categories[category_nodes_[c_idx]]);
+      const int category_id = category_nodes_[c_idx];
+#ifdef DEBUG
+      CHECK(category_node_weights_.find(category_id) 
+          != category_node_weights_.end());
+#endif
+      // weighted
+      aggr_dist_metric_->Accumulate(categories[category_id], 
+         /* category_node_weights_[category_id]*/ 1.0);
     }
   }
 
@@ -47,7 +54,7 @@ public:
   void ScaleCategoryWeights(const float scale) {
     map<int, float>::iterator it = category_node_weights_.begin();
     for (; it != category_node_weights_.end(); ++it) {
-      it->second *= scale;
+      it->second *= scale; //TODO
     }
   }
 
@@ -60,6 +67,13 @@ public:
   //}
 
   vector<int>& category_nodes() { return category_nodes_; }
+  const float& category_node_weight(const int category_id) {
+#ifdef DEBUG
+    CHECK(category_node_weights_.find(category_id) 
+        != category_node_weights_.end());
+#endif
+    return category_node_weights_[category_id];
+  }
   const Blob* aggr_dist_metric() const { return aggr_dist_metric_; }
   
  

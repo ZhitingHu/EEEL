@@ -72,7 +72,7 @@ public:
 #ifdef DEBUG
     CHECK(category_path_ != NULL);
 #endif
-   return category_path_; 
+    return category_path_; 
   }
   
   //void ClearNegSamples() {

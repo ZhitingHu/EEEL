@@ -8,29 +8,29 @@ progname=ee_main
 prog_path=${app_dir}/build/tools/${progname}
 
 # Data
-dataset_name=whole_parsed
-#dataset_name=tech_parsed
+#dataset_name=whole_parsed
+dataset_name=tech_parsed
 #dataset_name=apple
-dataset_path="${app_dir}/data/${dataset_name}"
+dataset_path="${app_dir}/../../EEEL/data/${dataset_name}"
 
 ## Parameters
 # embedding
-dim_embedding=100;
+dim_embedding=50;
 distance_metric_mode="DIAG";
 
 # training engine parameters
-num_iter=152000 # = 2 epoches
-eval_interval=200
+num_iter=1000
+eval_interval=10
 num_iter_per_eval=20
 batch_size=500
 
 # solver parameters
 learning_rate=0.05
-num_neg_sample=10
+num_neg_sample=100
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-snapshot=10000
+snapshot=100
 
 # Output
 output_dir=${app_dir}/output

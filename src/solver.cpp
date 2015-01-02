@@ -284,22 +284,22 @@ const float Solver::ComputeObjective_single(const vector<Datum*>& val_batch) {
         entity_i, datum->entity_o(), datum->category_path()))));
 #ifdef DEBUG
     if (isnan(datum_obj)) {
-      LOG(ERROR) << (-1.0) * PLearn::fastsigmoid(ComputeDist(entity_i, datum->entity_o(), datum->category_path()));
+      LOG(ERROR) << (-1.0) * PLearn::fastsigmoid(
+          ComputeDist(entity_i, datum->entity_o(), datum->category_path()));
     }
     CHECK(!isnan(datum_obj));
 #endif
     for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
+      datum->neg_category_path(neg_idx)->RefreshAggrDistMetric(categories_);
       datum_obj += log(max(kEpsilon, PLearn::fastsigmoid(ComputeDist(
-          entity_i, datum->neg_entity(neg_idx), datum->category_path()))));
+          entity_i, datum->neg_entity(neg_idx), 
+          datum->neg_category_path(neg_idx)))));
 #ifdef DEBUG
     CHECK(!isnan(datum_obj));
 #endif
     }
     obj += datum_obj;
 #ifdef DEBUG
-    if (isnan(obj)) {
-      LOG(ERROR) << obj << " = " << tmp << " + " << datum_obj;
-    }
     CHECK(!isnan(obj));
 #endif
   } 
@@ -319,8 +319,10 @@ const float Solver::ComputeObjective_omp(const vector<Datum*>& val_batch) {
     datum_obj += log(PLearn::fastsigmoid((-1.0) * ComputeDist(
         entity_i, datum->entity_o(), datum->category_path())));
     for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
+      datum->neg_category_path(neg_idx)->RefreshAggrDistMetric(categories_);
       datum_obj += log(PLearn::fastsigmoid(ComputeDist(
-          entity_i, datum->neg_entity(neg_idx), datum->category_path())));
+          entity_i, datum->neg_entity(neg_idx), 
+          datum->neg_category_path(neg_idx))));
     }
     obj += datum_obj;
   } 
@@ -420,69 +422,76 @@ void Solver::AccumulateCategoryGradient(const float coeff,
 }
 
 void Solver::ComputeEntityGradient(Datum* datum) {
-    // on e_i
-    const int entity_i = datum->entity_i();
-    Blob* entity_i_grad = datum->entity_i_grad();
-    float coeff = PLearn::fastsigmoid((-1.0) * ComputeDist(
-        entity_i, datum->entity_o(), datum->category_path())) - 1.0;
+  // on e_i
+  const int entity_i = datum->entity_i();
+  Blob* entity_i_grad = datum->entity_i_grad();
+  float coeff = PLearn::fastsigmoid((-1.0) * ComputeDist(
+      entity_i, datum->entity_o(), datum->category_path())) - 1.0;
 #ifdef DEBUG
-    if (isnan(coeff)) {
-      LOG(ERROR) << ComputeDist(entity_i, datum->entity_o(), datum->category_path());
-      LOG(ERROR) << PLearn::fastsigmoid((-1.0) * ComputeDist(
+  if (isnan(coeff)) {
+    LOG(ERROR) << ComputeDist(entity_i, datum->entity_o(), datum->category_path());
+    LOG(ERROR) << PLearn::fastsigmoid((-1.0) * ComputeDist(
         entity_i, datum->entity_o(), datum->category_path()));
-    }
-    CHECK(!isnan(coeff));
+  }
+  CHECK(!isnan(coeff));
 #endif
-    AccumulateEntityGradient(coeff, datum->category_path()->aggr_dist_metric(), 
-        entity_i, datum->entity_o(), entity_i_grad);
-    // on e_o  
-    // = (-1) * gradient_on_e_i, so simply do the copy
-    datum->entity_o_grad()->CopyFrom(entity_i_grad, -1.0);
+  AccumulateEntityGradient(coeff, datum->category_path()->aggr_dist_metric(), 
+      entity_i, datum->entity_o(), entity_i_grad);
+  // on e_o  
+  // = (-1) * gradient_on_e_i, so simply do the copy
+  datum->entity_o_grad()->CopyFrom(entity_i_grad, -1.0);
 
-    // neg_samples
-    for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
-      Blob* neg_entity_grad = datum->neg_entity_grad(neg_idx);
-      coeff = 1.0 - PLearn::fastsigmoid(ComputeDist(
-          entity_i, datum->neg_entity(neg_idx), datum->category_path()));
+  // neg_samples
+  for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
+    Blob* neg_entity_grad = datum->neg_entity_grad(neg_idx);
+    coeff = 1.0 - PLearn::fastsigmoid(ComputeDist(
+        entity_i, datum->neg_entity(neg_idx), 
+        datum->neg_category_path(neg_idx)));
 #ifdef DEBUG
     CHECK(!isnan(coeff));
 #endif
-      //LOG(ERROR) << "neg_idx "  << neg_idx;
-      AccumulateEntityGradient(
-          (-1.0) * coeff, datum->neg_category_path(neg_idx)->aggr_dist_metric(), 
-          entity_i, datum->neg_entity(neg_idx), neg_entity_grad);
-      // Accumulate (-1) * gradient_on_neg_samples to gradient_on_e_i 
-      //LOG(ERROR) << "start accu ";
-      entity_i_grad->Accumulate(neg_entity_grad, -1.0);
-      //LOG(ERROR) << "accu done";
-    }
+    AccumulateEntityGradient(
+        (-1.0) * coeff, datum->neg_category_path(neg_idx)->aggr_dist_metric(), 
+        entity_i, datum->neg_entity(neg_idx), neg_entity_grad);
+    // Accumulate (-1) * gradient_on_neg_samples to gradient_on_e_i 
+    entity_i_grad->Accumulate(neg_entity_grad, -1.0);
+  }
 }
 
 void Solver::ComputeCategoryGradient(Datum* datum) {
   // process (e_i,  e_o)
-  const vector<int>& category_nodes = datum->category_path()->category_nodes();
+  Path* category_path = datum->category_path();
+  const vector<int>& category_nodes = category_path->category_nodes();
   const int entity_i = datum->entity_i();
   const int entity_o = datum->entity_o();
   float coeff = PLearn::fastsigmoid((-1.0) * ComputeDist(
       entity_i, entity_o, datum->category_path())) - 1.0;
   for (int c_idx = 0; c_idx < category_nodes.size(); ++c_idx) {
-    AccumulateCategoryGradient(coeff, entity_i, entity_o, 
+    // use weighted coeff
+    const float weighted_coeff = coeff;
+       // * category_path->category_node_weight(category_nodes[c_idx]);
+    //LOG(INFO) << category_path->category_node_weight(category_nodes[c_idx]) 
+    //    << " / " << category_nodes.size();
+    AccumulateCategoryGradient(weighted_coeff, entity_i, entity_o, 
         datum->category_grad(category_nodes[c_idx]));
   }
 
   // process (e_i, negative samples)
-  const vector<Path*>& neg_category_paths = datum->neg_category_paths();
+  //const vector<Path*>& neg_category_paths = datum->neg_category_paths();
 #ifdef DEBUG
-  CHECK_EQ(neg_category_paths.size(), num_neg_sample_);
+  CHECK_EQ(datum->neg_category_paths().size(), num_neg_sample_);
 #endif
-  for (int path_idx = 0; path_idx < neg_category_paths.size(); ++path_idx) {
-    const vector<int>& neg_category_nodes 
-        = neg_category_paths[path_idx]->category_nodes();
+  for (int path_idx = 0; path_idx < num_neg_sample_; ++path_idx) {
+    Path* neg_path = datum->neg_category_path(path_idx);
+    const vector<int>& neg_category_nodes = neg_path->category_nodes();
     const int neg_entity = datum->neg_entity(path_idx);
     float coeff = 1.0 - PLearn::fastsigmoid(ComputeDist(
-        entity_i, neg_entity, neg_category_paths[path_idx]));
+        entity_i, neg_entity, neg_path));
     for (int c_idx = 0; c_idx < neg_category_nodes.size(); ++c_idx) {
-      AccumulateCategoryGradient(coeff, entity_i, neg_entity, 
+      // use weighted coeff
+      const float weighted_coeff = coeff;
+         // * neg_path->category_node_weight(neg_category_nodes[c_idx]);
+      AccumulateCategoryGradient(weighted_coeff, entity_i, neg_entity, 
           datum->category_grad(neg_category_nodes[c_idx]));
     }
   }
@@ -506,14 +515,10 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
   for (int epoch = 0; epoch < num_epoch_on_batch_; ++epoch) {
     // Refresh path aggregated distance metric
     for (int d = 0; d < minibatch.size(); ++d) {
-      //LOG(ERROR) << "refreshing datum " << d;
-      //CHECK(minibatch[d] != NULL);
       minibatch[d]->category_path()->RefreshAggrDistMetric(categories_);
-      //LOG(ERROR) << "refreshing datum " << d << " done.";
 
       vector<Path*>& neg_category_paths = minibatch[d]->neg_category_paths();
       for (int p_idx = 0; p_idx < neg_category_paths.size(); ++p_idx) {
-        //LOG(ERROR) << "refreshing datum " << d << " neg " << p_idx;
         neg_category_paths[p_idx]->RefreshAggrDistMetric(categories_);
       }
     }
