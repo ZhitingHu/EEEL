@@ -23,8 +23,9 @@ public:
     if (!aggr_dist_metric_) {
       aggr_dist_metric_ = new Blob(
           entity::Context::dim_embedding(), entity::Context::dim_embedding());
-    }  
-    //aggr_dist_metric_->ClearData();
+    } else {  
+      //aggr_dist_metric_->ClearData();
+    }
     for (int c_idx = 0; c_idx < category_nodes_.size(); ++c_idx) {
       aggr_dist_metric_->Accumulate(categories[category_nodes_[c_idx]]);
     }
