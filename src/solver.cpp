@@ -468,8 +468,8 @@ void Solver::ComputeCategoryGradient(Datum* datum) {
       entity_i, entity_o, datum->category_path())) - 1.0;
   for (int c_idx = 0; c_idx < category_nodes.size(); ++c_idx) {
     // use weighted coeff
-    const float weighted_coeff = coeff;
-       // * category_path->category_node_weight(category_nodes[c_idx]);
+    const float weighted_coeff = coeff
+        * category_path->category_node_weight(category_nodes[c_idx]);
     //LOG(INFO) << category_path->category_node_weight(category_nodes[c_idx]) 
     //    << " / " << category_nodes.size();
     AccumulateCategoryGradient(weighted_coeff, entity_i, entity_o, 
@@ -489,8 +489,8 @@ void Solver::ComputeCategoryGradient(Datum* datum) {
         entity_i, neg_entity, neg_path));
     for (int c_idx = 0; c_idx < neg_category_nodes.size(); ++c_idx) {
       // use weighted coeff
-      const float weighted_coeff = coeff;
-         // * neg_path->category_node_weight(neg_category_nodes[c_idx]);
+      const float weighted_coeff = coeff
+          * neg_path->category_node_weight(neg_category_nodes[c_idx]);
       AccumulateCategoryGradient(weighted_coeff, entity_i, neg_entity, 
           datum->category_grad(neg_category_nodes[c_idx]));
     }

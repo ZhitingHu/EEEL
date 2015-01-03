@@ -12,7 +12,7 @@ prog_path=${app_dir}/build/tools/${progname}
 dataset_name=apple
 dataset_path="${app_dir}/data/${dataset_name}"
 
-snapshot_iter=10
+resume_iter=10
 
 ## Parameters
 # embedding
@@ -22,13 +22,12 @@ distance_metric_mode="DIAG";
 # solver parameters (for specifying output_dir)
 learning_rate=0.01
 num_neg_sample=50
-snapshot=200
-openmp=noopenmp
+batch_size=100
 
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_omp${openmp}"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}"
 log_dir=${output_dir}/analysis_logs
 mkdir -p ${log_dir}
 
@@ -44,8 +43,8 @@ GLOG_vmodule="" \
     $prog_path \
     --dim_embedding $dim_embedding \
     --distance_metric_mode $distance_metric_mode \
-    --snapshot_path $output_dir \
-    --snapshot_iter $snapshot_iter \
+    --resume_path $output_dir \
+    --resume_iter $resume_iter \
     --dataset_path $dataset_path \
     --output_file_prefix $output_dir \
     --num_neg_sample $num_neg_sample

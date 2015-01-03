@@ -145,8 +145,8 @@ void EEEngine::ReadData() {
     category_node->set_level(tokens[1]);
   }
 
-  ReadEntityAncestorFile(dataset_path + "/" + entity_to_ancestor_filename);
-  //ReadEntityAncestorFile_bac(dataset_path + "/" + entity_to_ancestor_filename);
+  //ReadEntityAncestorFile(dataset_path + "/" + entity_to_ancestor_filename);
+  ReadEntityAncestorFile_bac(dataset_path + "/" + entity_to_ancestor_filename);
 
   ReadEntityPairFile(dataset_path + "/" + pair_filename);
 
@@ -288,13 +288,14 @@ void EEEngine::SampleNegEntities(Datum* datum) {
       = train_data_.positive_entities(entity_i);
 
   //TODO add count
-  //TODO openmp
   for (int neg_sample_idx = 0; neg_sample_idx < num_neg_sample_; 
       ++neg_sample_idx) { 
     // TODO use sophisiticated distribution
     int neg_entity = rand() % num_entity_;
     while (neg_entity == entity_i || 
-        pos_entities.find(neg_entity) != pos_entities.end()) {
+        pos_entities.find(neg_entity) != pos_entities.end() ||
+        train_data_.positive_entities(neg_entity).find(entity_i) 
+        != train_data_.positive_entities(neg_entity).end()) {
       neg_entity = rand() % num_entity_;
     }
     // Generate path between entity_i and neg_sample

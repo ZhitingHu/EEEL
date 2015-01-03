@@ -34,7 +34,7 @@ public:
 #endif
       // weighted
       aggr_dist_metric_->Accumulate(categories[category_id], 
-         /* category_node_weights_[category_id]*/ 1.0);
+          category_node_weights_[category_id]);
     }
   }
 
@@ -54,7 +54,7 @@ public:
   void ScaleCategoryWeights(const float scale) {
     map<int, float>::iterator it = category_node_weights_.begin();
     for (; it != category_node_weights_.end(); ++it) {
-      it->second *= scale; //TODO
+      it->second *= scale * 10; //TODO
     }
   }
 

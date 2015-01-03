@@ -10,7 +10,6 @@
 #include <vector>
 #include <cstdint>
 #include <iostream>
-#include <numeric>	// test use only
 
 using namespace std;
 
@@ -41,7 +40,10 @@ int main(int argc, char *argv[]) {
 
   entity::Context::set_phase(entity::Context::ANALYZE);
   entity::Analyst analyst(FLAGS_resume_path, FLAGS_resume_iter);
-  analyst.ComputeNearestNeibors(100, FLAGS_output_file_prefix);
+
+  vector<int> candidate_entities = {9336, 397504, 719040, 1480281, 131};
+  analyst.ComputeNearestNeibors(40, candidate_entities, 
+      FLAGS_output_file_prefix);
 
   LOG(ERROR) << "Done."; 
  
