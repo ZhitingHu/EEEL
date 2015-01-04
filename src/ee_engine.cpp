@@ -15,6 +15,8 @@
 #include <thread>
 #include <time.h>
 #include <omp.h>
+#include <math.h>
+#include <algorithm>
 
 namespace entity {
 
@@ -157,9 +159,13 @@ void EEEngine::ReadData() {
   level_file.close();
 
   LOG(INFO) << "Data reading done.";
+
 }
 
 void EEEngine::ReadEntityPairFile(const string& filename) {
+  entity_freq_.clear();
+  entity_freq_.resize(num_entity_, 0); 
+
   ifstream pair_file(filename.c_str());
   if (!pair_file.is_open()) {
     LOG(FATAL) << "Fail to open " << filename;
@@ -170,9 +176,22 @@ void EEEngine::ReadEntityPairFile(const string& filename) {
   int entity_i, entity_o, count;
   while (pair_file >> entity_i) {
     pair_file >> entity_o >> count;
-    train_data_.AddDatum(entity_i, entity_o, count);
+    if (entity_i == entity_o) {
+      continue;
+    }
+
+    //TODO
+    // Normalize to < 10
+    //count = (count >  10 ? 10 : count);
+    //for (int i = 0; i < count; ++i) {
+      count = 1;
+      train_data_.AddDatum(entity_i, entity_o, 1);
+
+      num_train_data_++;
+      entity_freq_[entity_i] += count;
+      entity_freq_[entity_o] += count;
+    //}
     
-    num_train_data_++;
     if (num_train_data_ % 1000000 == 0) {
       cout << "." << flush;
     }
@@ -257,9 +276,24 @@ void EEEngine::ReadEntityAncestorFile_bac(const string& filename) {
 #endif
 }
 
+void EEEngine::BuildNoiseDistribution() {
+  CHECK(entity_freq_.size() == num_entity_) << " ";
+
+  entity_freq_[0] = pow(entity_freq_[0], 1.33333333);
+  for (int e_id = 1; e_id < num_entity_; ++e_id) {
+    entity_freq_[e_id] = pow(entity_freq_[e_id], 1.33333333);
+    entity_freq_[e_id] += entity_freq_[e_id - 1];
+  }
+  freq_sum_ = entity_freq_[num_entity_ - 1];
+
+#ifdef DEBUG
+  LOG(INFO) << "BuildNoiseDistribution: sum = " << freq_sum_;
+#endif
+  LOG(INFO) << "Build Noise Distribution Done.";
+}
+
 void EEEngine::ThreadCreateMinibatch(const vector<int>* next_minibatch_data_idx,
     vector<Datum*>* next_minibatch) {
-  //LOG(INFO) << "=== start";
   const int batch_size = next_minibatch_data_idx->size();
 #ifdef OPENMP
   #pragma omp parallel for
@@ -279,7 +313,6 @@ void EEEngine::ThreadCreateMinibatch(const vector<int>* next_minibatch_data_idx,
     
     (*next_minibatch)[d_idx] = datum;
   }
-  //LOG(INFO) << "=== end";
 }
 
 void EEEngine::SampleNegEntities(Datum* datum) {
@@ -287,16 +320,14 @@ void EEEngine::SampleNegEntities(Datum* datum) {
   const set<int>& pos_entities 
       = train_data_.positive_entities(entity_i);
 
-  //TODO add count
   for (int neg_sample_idx = 0; neg_sample_idx < num_neg_sample_; 
       ++neg_sample_idx) { 
-    // TODO use sophisiticated distribution
-    int neg_entity = rand() % num_entity_;
+    int neg_entity = RandSampleNegEntity();
     while (neg_entity == entity_i || 
         pos_entities.find(neg_entity) != pos_entities.end() ||
         train_data_.positive_entities(neg_entity).find(entity_i) 
         != train_data_.positive_entities(neg_entity).end()) {
-      neg_entity = rand() % num_entity_;
+      neg_entity = RandSampleNegEntity();
     }
     // Generate path between entity_i and neg_sample
     Path* neg_path = entity_category_hierarchy_.FindPathBetweenEntities(
@@ -304,6 +335,13 @@ void EEEngine::SampleNegEntities(Datum* datum) {
 
     datum->AddNegSample(neg_sample_idx, neg_entity, neg_path);
   }
+}
+
+inline int EEEngine::RandSampleNegEntity() {
+  double rn = ((double)rand() / RAND_MAX) * freq_sum_;
+  return std::upper_bound(entity_freq_.begin(), entity_freq_.end(), rn) 
+      - entity_freq_.begin();
+  //return rand() % num_entity_;
 }
 
 inline void EEEngine::CopyMinibatch(const vector<Datum*>& source, 
@@ -342,6 +380,8 @@ void EEEngine::Start() {
   const int resume_iter = context.get_int32("resume_iter");
 
   int eval_counter = 0;
+
+  BuildNoiseDistribution();
 
   // EEEL solver initialization
   Solver eeel_solver(num_entity_, num_category_);

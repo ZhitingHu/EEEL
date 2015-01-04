@@ -37,10 +37,13 @@ void Analyst::ComputeNearestNeibors(const int top_k,
   LOG(ERROR) << "Computing nearest neibors";
   ofstream output;
   output.open((output_path + "/nearest_neibors").c_str());
+  CHECK(output.is_open());
+
   int counter = 0;
 //#ifdef OPENMP
 //  #pragma omp parallel for
 //#endif
+  LOG(INFO) << "Number of candidate entities: " << candidate_entities.size();
   for (int idx = 0; idx < candidate_entities.size(); ++idx) {
     const int e_id = candidate_entities[idx];
     vector<pair<int, float> > nearest_entities;

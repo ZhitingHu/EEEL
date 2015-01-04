@@ -85,7 +85,7 @@ private:
 
   int num_neg_sample_;
   int dim_embedding_;
-  double learning_rate_; //TODO adaptive lr
+  float learning_rate_; //TODO adaptive lr
   int num_epoch_on_batch_;
   int num_iter_on_entity_;
   int num_iter_on_category_;

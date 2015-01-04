@@ -45,10 +45,15 @@ public:
   }
 
   const set<int>& positive_entities(const int entity_i) { 
-#ifdef DEBUG
-    CHECK(entity_pairs_.find(entity_i) != entity_pairs_.end());
-#endif
-    return entity_pairs_[entity_i]; 
+//#ifdef DEBUG
+//    CHECK(entity_pairs_.find(entity_i) != entity_pairs_.end());
+//#endif
+    map<int, set<int> >::const_iterator it = entity_pairs_.find(entity_i);
+    if (it != entity_pairs_.end()) {
+      return it->second;
+    } else {
+      return empty_set_;
+    }
   }
  
   //const map<int, Path*>& positive_entity_path(const int entity_i) { 
@@ -88,6 +93,7 @@ private:
   //map<int, map<int, Path*> > entity_pair_path_;
   // entity_i => { entity_o }
   map<int, set<int> > entity_pairs_;
+  set<int> empty_set_;
 };
 
 }  // namespace entity

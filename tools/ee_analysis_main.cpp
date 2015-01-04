@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
   entity::Context::set_phase(entity::Context::ANALYZE);
   entity::Analyst analyst(FLAGS_resume_path, FLAGS_resume_iter);
 
-  vector<int> candidate_entities = {9336, 397504, 719040, 1480281, 131};
+  //vector<int> candidate_entities = {9336, 397504, 719040, 1480281, 131};
+  vector<int> candidate_entities = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 3399};
   analyst.ComputeNearestNeibors(40, candidate_entities, 
       FLAGS_output_file_prefix);
 

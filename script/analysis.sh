@@ -12,7 +12,7 @@ prog_path=${app_dir}/build/tools/${progname}
 dataset_name=apple
 dataset_path="${app_dir}/data/${dataset_name}"
 
-resume_iter=10
+resume_iter=6000
 
 ## Parameters
 # embedding
@@ -21,13 +21,13 @@ distance_metric_mode="DIAG";
 
 # solver parameters (for specifying output_dir)
 learning_rate=0.01
-num_neg_sample=50
+num_neg_sample=10
 batch_size=100
 
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-temp-bettersample-weighted"
 log_dir=${output_dir}/analysis_logs
 mkdir -p ${log_dir}
 

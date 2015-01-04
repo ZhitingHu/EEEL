@@ -39,10 +39,6 @@ public:
   }
 
   void AddCategoryNode(const int category_id, const float weight) {
-//#ifdef DEBUG
-//    CHECK(category_node_weights_.find(category_id) 
-//        == category_node_weights_.end());
-//#endif
 #ifdef DEBUG
     CHECK(category_node_add_times_[category_id] < 2);
     category_node_add_times_[category_id]++;
@@ -54,17 +50,9 @@ public:
   void ScaleCategoryWeights(const float scale) {
     map<int, float>::iterator it = category_node_weights_.begin();
     for (; it != category_node_weights_.end(); ++it) {
-      it->second *= scale * 10; //TODO
+      it->second *= scale; //weighted
     }
   }
-
-  //void IncCategoryNodeWeight(const int category_id, const int weight = 1) {
-  //#ifdef DEBUG
-  //  CHECK(category_node_weights_.find(category_id) 
-  //      != category_node_weights_.end());
-  //#endif
-  //  category_node_weights_[category_id] += weight;
-  //}
 
   vector<int>& category_nodes() { return category_nodes_; }
   const float& category_node_weight(const int category_id) {

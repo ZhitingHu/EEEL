@@ -11,31 +11,33 @@ prog_path=${app_dir}/build/tools/${progname}
 #dataset_name=whole_parsed
 #dataset_name=tech_parsed
 dataset_name=apple
-dataset_path="${app_dir}/../EEEL/data/${dataset_name}"
+dataset_path="${app_dir}/../../EEEL/data/${dataset_name}"
 
 ## Parameters
 # embedding
-dim_embedding=300;
+dim_embedding=100;
 distance_metric_mode="DIAG";
 
 # training engine parameters
-num_iter=76000 # = 1 epoches
-eval_interval=400
+num_iter=6000 # = 1 epoches
+eval_interval=100
 num_iter_per_eval=20
-batch_size=500
+batch_size=100
 
 # solver parameters
-learning_rate=0.05
+learning_rate=0.01
 num_neg_sample=10
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-snapshot=8000
+snapshot=1000
+#resume_path=""
+#resume_iter=4000
 
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}_weighted"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-temp-bettersample-weighted-scaled"
 #rm -rf ${output_dir}
 mkdir -p ${output_dir}
 log_dir=${output_dir}/logs

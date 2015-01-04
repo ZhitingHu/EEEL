@@ -110,30 +110,36 @@ public:
     }
   }
 
+  void ClearEntityGrads() {
+    entity_i_grad_->ClearData();
+    entity_o_grad_->ClearData();
+    for (int neg_idx = 0; neg_idx < neg_entity_grads_.size(); ++neg_idx) {
+      neg_entity_grads_[neg_idx]->ClearData();
+    }
+  }
+  void ClearCategoryGrads() {
+    for (int c_idx = 0; c_idx < category_grads_.size(); ++c_idx) {
+      category_grads_[c_idx]->ClearData();
+    }
+  }
+
   Blob* entity_i_grad() { return entity_i_grad_; }
   Blob* entity_o_grad() { return entity_o_grad_; }
-   
   const int neg_entity(const int neg_idx) { return neg_entity_id_[neg_idx]; }
-
   vector<Path*>& neg_category_paths() { 
     return neg_category_paths_; 
   } 
-
   Path* neg_category_path(const int neg_idx) { 
     return neg_category_paths_[neg_idx]; 
   } 
-
   Blob* neg_entity_grad(const int neg_idx) { return neg_entity_grads_[neg_idx]; }
-
   Blob* category_grad(const int category_id) {
 #ifdef DEBUG
     CHECK(category_index_.find(category_id) != category_index_.end());
 #endif
     return category_grads_[category_index_[category_id]]; 
   }
-
   const vector<Blob*>& category_grads() { return category_grads_; }
-
   const map<int, int>& category_index() { return category_index_; }
 
 private: 
@@ -144,7 +150,6 @@ private:
   int entity_o_;
   int count_;
   Path* category_path_;
-
 
   /// Used in optimization 
 

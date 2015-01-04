@@ -71,15 +71,14 @@ void Solver::RandInit() {
 
   for (int e_idx = 0; e_idx < num_entity_; ++e_idx) {
     for (int i = 0; i < entity::Context::dim_embedding(); ++i) {
-      entities_[e_idx]->init_data_at(
-          static_cast <float> (rand()) / static_cast <float> (RAND_MAX), i);
+      entities_[e_idx]->init_data_at((float)rand() / RAND_MAX, i);
     }
+    entities_[e_idx]->Normalize();
   }
   for (int c_idx = 0; c_idx < num_category_; ++c_idx) {
     for (int i = 0; i < entity::Context::dim_embedding(); ++i) {
       for (int j = 0; j < entity::Context::dim_embedding(); ++j) {
-        categories_[c_idx]->init_data_at(
-            static_cast <float> (rand()) / static_cast <float> (RAND_MAX), i, j);
+        categories_[c_idx]->init_data_at((float)rand() / RAND_MAX, i, j);
       }
     }
   }
@@ -342,7 +341,7 @@ const float Solver::ComputeDist(const int entity_from, const int entity_to,
 #ifdef DEBUG
   CHECK(entity_to_vec);
 #endif
-  // xMx = sum_ij { x_i * x_j * M_ij }
+  // (x-y)^{T} M (x-y) = sum_ij (x_i - y_i) * (x_j - y_j) * M_ij 
   float dist = 0;
   if (entity::Context::dist_metric_mode() == entity::Context::DIAG) {
 #ifdef DEBUG
@@ -353,7 +352,9 @@ const float Solver::ComputeDist(const int entity_from, const int entity_to,
   CHECK(dist_metric_mat);
 #endif
     for (int i = 0; i < entity::Context::dim_embedding(); ++i) {
-      dist += entity_from_vec[i] * entity_to_vec[i] * dist_metric_mat[i];  
+      dist += (entity_from_vec[i] - entity_to_vec[i]) 
+          * (entity_from_vec[i] - entity_to_vec[i]) 
+          * dist_metric_mat[i];  
     }
   } else if (entity::Context::dist_metric_mode() == entity::Context::EDIAG) {
     LOG(FATAL) << "do not support DistMetricMode::EDIAG right now.";
@@ -361,7 +362,8 @@ const float Solver::ComputeDist(const int entity_from, const int entity_to,
      const Blob* dist_metric = path->aggr_dist_metric();
      for (int i = 0; i < entity::Context::dim_embedding(); ++i) {
        for (int j = 0; j < entity::Context::dim_embedding(); ++j) { 
-         dist += entity_from_vec[i] * entity_to_vec[j] 
+         dist += (entity_from_vec[i] - entity_to_vec[i]) 
+             * (entity_from_vec[j] - entity_to_vec[j])
              * dist_metric->data_at(i, j);  
        }
      }
@@ -410,7 +412,7 @@ void Solver::AccumulateCategoryGradient(const float coeff,
   if (entity::Context::dist_metric_mode() == entity::Context::DIAG) {
     for (int i = 0; i < entity::Context::dim_embedding(); ++i) {
       grad_mat[i] += coeff * (entity_from_vec[i] - entity_to_vec[i])
-          * (entity_from_vec[i] - entity_to_vec[i]);;
+          * (entity_from_vec[i] - entity_to_vec[i]);
     }
   } else if (entity::Context::dist_metric_mode() == entity::Context::EDIAG) {
     LOG(FATAL) << "do not support DistMetricMode::EDIAG right now.";
@@ -434,6 +436,7 @@ void Solver::ComputeEntityGradient(Datum* datum) {
         entity_i, datum->entity_o(), datum->category_path()));
   }
   CHECK(!isnan(coeff));
+  CHECK_LE(coeff, 0);
 #endif
   AccumulateEntityGradient(coeff, datum->category_path()->aggr_dist_metric(), 
       entity_i, datum->entity_o(), entity_i_grad);
@@ -449,12 +452,15 @@ void Solver::ComputeEntityGradient(Datum* datum) {
         datum->neg_category_path(neg_idx)));
 #ifdef DEBUG
     CHECK(!isnan(coeff));
+    CHECK_GE(coeff, 0);
 #endif
     AccumulateEntityGradient(
         (-1.0) * coeff, datum->neg_category_path(neg_idx)->aggr_dist_metric(), 
         entity_i, datum->neg_entity(neg_idx), neg_entity_grad);
-    // Accumulate (-1) * gradient_on_neg_samples to gradient_on_e_i 
-    entity_i_grad->Accumulate(neg_entity_grad, -1.0);
+  }
+  // Accumulate (-1) * gradient_on_neg_samples to gradient_on_e_i 
+  for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
+    entity_i_grad->Accumulate(datum->neg_entity_grad(neg_idx), -1.0);
   }
 }
 
@@ -470,14 +476,11 @@ void Solver::ComputeCategoryGradient(Datum* datum) {
     // use weighted coeff
     const float weighted_coeff = coeff
         * category_path->category_node_weight(category_nodes[c_idx]);
-    //LOG(INFO) << category_path->category_node_weight(category_nodes[c_idx]) 
-    //    << " / " << category_nodes.size();
     AccumulateCategoryGradient(weighted_coeff, entity_i, entity_o, 
         datum->category_grad(category_nodes[c_idx]));
   }
 
   // process (e_i, negative samples)
-  //const vector<Path*>& neg_category_paths = datum->neg_category_paths();
 #ifdef DEBUG
   CHECK_EQ(datum->neg_category_paths().size(), num_neg_sample_);
 #endif
@@ -490,7 +493,7 @@ void Solver::ComputeCategoryGradient(Datum* datum) {
     for (int c_idx = 0; c_idx < neg_category_nodes.size(); ++c_idx) {
       // use weighted coeff
       const float weighted_coeff = coeff
-          * neg_path->category_node_weight(neg_category_nodes[c_idx]);
+         * neg_path->category_node_weight(neg_category_nodes[c_idx]);
       AccumulateCategoryGradient(weighted_coeff, entity_i, neg_entity, 
           datum->category_grad(neg_category_nodes[c_idx]));
     }
@@ -511,7 +514,7 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
 #ifdef DEBUG
   CHECK(minibatch.size() != 0);
 #endif
-  float update_coeff = (-1.0) * learning_rate_ / minibatch.size();
+  float update_coeff =/* (-1.0) **/ learning_rate_ / minibatch.size();
   for (int epoch = 0; epoch < num_epoch_on_batch_; ++epoch) {
     // Refresh path aggregated distance metric
     for (int d = 0; d < minibatch.size(); ++d) {
@@ -524,36 +527,40 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
     }
     //LOG(ERROR) << "refresh path dist metric done."; 
 
+    // TODO
+    //LOG(INFO) << ComputeDist(minibatch[0]->entity_i(), minibatch[0]->entity_o(), 
+    //    minibatch[0]->category_path()) << "\t" 
+    //    <<  ComputeDist(minibatch[0]->entity_i(), minibatch[0]->neg_entity(0),
+    //    minibatch[0]->neg_category_path(0)); 
+
     // Optimize entity embedding
     for (int iter = 0; iter < num_iter_on_entity_; ++iter) {
       for (int d = 0; d < minibatch.size(); ++d) {
         Datum* datum = minibatch[d];
+
+        if (iter > 0) {
+          datum->ClearEntityGrads();
+        }
+
         ComputeEntityGradient(datum);
 
         // Accumulate entity gradients
 #ifdef DEBUG
         CHECK_GT(entity_grads_.size(), 0);
-        //LOG(ERROR) << "[1] check 1 " << datum->entity_i();
         entity_grads_[datum->entity_i()]->CheckNaN();
-        //LOG(ERROR) << "[1] check 2";
         datum->entity_i_grad()->CheckNaN();
 #endif    
-        //LOG(ERROR) << "[1] accu start";
         entity_grads_[datum->entity_i()]->Accumulate(
             datum->entity_i_grad(), 1.0);
-        //LOG(ERROR) << "[1] accu done.";    
         entity_grads_[datum->entity_o()]->Accumulate(
             datum->entity_o_grad(), 1.0);
-        //LOG(ERROR) << "[2] accu done.";
         if (epoch == 0 && iter == 0) {
           updated_entities_.insert(datum->entity_i());
           updated_entities_.insert(datum->entity_o());
         }
         for (int neg_idx = 0; neg_idx < num_neg_sample_; ++neg_idx) {
-          //LOG(ERROR) << "[3] accu start.";
           entity_grads_[datum->neg_entity(neg_idx)]->Accumulate(
               datum->neg_entity_grad(neg_idx), 1.0);
-          //LOG(ERROR) << "[3] accu done.";
           if (epoch == 0 && iter == 0) {
             updated_entities_.insert(datum->neg_entity(neg_idx));
           }
@@ -569,7 +576,15 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
         // clear gradidents
         entity_grads_[*set_it_]->ClearData();
       }
+
+      // TODO
+      //LOG(INFO) << ComputeDist(minibatch[0]->entity_i(), minibatch[0]->entity_o(), 
+      //    minibatch[0]->category_path()) << "\t" 
+      //    <<  ComputeDist(minibatch[0]->entity_i(), minibatch[0]->neg_entity(0),
+      //    minibatch[0]->neg_category_path(0)); 
     } // end of optimizing entity embedding
+
+
     //LOG(ERROR) << "optimize entity vector done."; 
 
     // Optimize category embedding
@@ -593,6 +608,9 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
 #endif        
             neg_category_paths[p_idx]->RefreshAggrDistMetric(categories_);
           }
+
+          // Clear category grads
+          datum->ClearCategoryGrads();
         }
 
         ComputeCategoryGradient(datum); 
@@ -616,7 +634,6 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
       set_it_ = updated_categories_.begin();
       for (; set_it_ != updated_categories_.end(); ++set_it_) {
 #ifdef DEBUG
-        //LOG(ERROR) << "cate " << *set_it_; 
         CHECK_LT(*set_it_, category_grads_.size());
         CHECK_LT(*set_it_, categories_.size());
 #endif
@@ -624,6 +641,13 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
         // clear gradients
         category_grads_[*set_it_]->ClearData();
       }
+
+      // TODO
+      //LOG(INFO) << ComputeDist(minibatch[0]->entity_i(), minibatch[0]->entity_o(), 
+      //    minibatch[0]->category_path()) << "\t" 
+      //    <<  ComputeDist(minibatch[0]->entity_i(), minibatch[0]->neg_entity(0),
+      //    minibatch[0]->neg_category_path(0)); 
+   
     } // end of optimizing category embedding 
     //LOG(ERROR) << "optimize cate vector done."; 
   } // end of epoches

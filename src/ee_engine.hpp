@@ -43,19 +43,27 @@ private:    // private functions
   void ReadEntityPairFile(const string& filename); 
   void ReadEntityAncestorFile(const string& filename); 
   void ReadEntityAncestorFile_bac(const string& filename); 
+
+  // for neg sampling
+  void BuildNoiseDistribution();
+  int RandSampleNegEntity();
  
 private:
 
   Dataset train_data_;
-  Dataset test_data_;
-  int num_train_data_;  
-  int num_test_data_;  
+  //Dataset test_data_;
+  int num_train_data_;
+  //int num_test_data_;
 
   Hierarchy entity_category_hierarchy_;
 
   int32_t num_neg_sample_;
   int32_t num_entity_;
   int32_t num_category_;
+
+  // for neg sampling
+  vector<double> entity_freq_;
+  double freq_sum_;
 };
 
 }  // namespace entity
