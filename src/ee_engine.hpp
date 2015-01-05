@@ -40,9 +40,13 @@ private:    // private functions
       vector<Datum*>& target); 
   inline void ClearMinibatch(vector<Datum*>& minibatch);
 
+  void ReadEntityCategoryFile(const string& filename); 
+ 
+  void ReadEntityAncestorFile_bin(const string& filename); 
+  void ReadEntityAncestorFile_txt(const string& filename); 
+  void ReadEntityAncestorFile_txt_bac(const string& filename); 
+
   void ReadEntityPairFile(const string& filename); 
-  void ReadEntityAncestorFile(const string& filename); 
-  void ReadEntityAncestorFile_bac(const string& filename); 
 
   // for neg sampling
   void BuildNoiseDistribution();

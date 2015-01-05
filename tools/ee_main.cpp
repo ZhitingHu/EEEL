@@ -47,7 +47,7 @@ DEFINE_string(dataset_path, "data/tech/", "data path");
 DEFINE_string(output_file_prefix, "output/", "Results go here.");
 DEFINE_string(category_filename, "categories.txt", "category filename");
 DEFINE_string(entity_filename, "entity.txt", "entity filename");
-DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.txt", "entity-ancestor filename");
+DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.bin", "entity-ancestor filename");
 DEFINE_string(entity_to_category_filename, "entity2category.txt", "entity-category filename");
 DEFINE_string(hierarchy_id_filename, "hierarchy_id.txt", "hierarchy id filename");
 DEFINE_string(pair_filename, "pair.txt", "pair id filename");
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
   // read data
   ee_engine.ReadData();
   // training
-  ee_engine.Start();
+  //ee_engine.Start();
 
   LOG(INFO) << "Entity Embedding finished and shut down!";
  

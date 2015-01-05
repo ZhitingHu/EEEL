@@ -20,14 +20,14 @@ dim_embedding=100;
 distance_metric_mode="DIAG";
 
 # solver parameters (for specifying output_dir)
-learning_rate=0.01
+learning_rate=1
 num_neg_sample=10
 batch_size=100
 
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-temp-bettersample-weighted"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-temp-bettersample-weighted-scaled"
 log_dir=${output_dir}/analysis_logs
 mkdir -p ${log_dir}
 

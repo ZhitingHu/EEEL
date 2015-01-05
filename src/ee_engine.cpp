@@ -41,7 +41,6 @@ EEEngine::~EEEngine() { }
 
 void EEEngine::ReadData() {
   string line;
-  int counter;
 
   // Parse gflag
   entity::Context& context = entity::Context::get_instance();
@@ -57,29 +56,25 @@ void EEEngine::ReadData() {
   // file streams
   ifstream category_file((dataset_path + "/" + category_filename).c_str());
   ifstream entity_file((dataset_path + "/" + entity_filename).c_str());
-  ifstream entity_category_file((dataset_path + "/" + entity_to_category_filename).c_str());
   ifstream hierarchy_id_file((dataset_path + "/" + hierarchy_id_filename).c_str());
   ifstream level_file((dataset_path + "/" + level_filename).c_str());
 
   if (!category_file.is_open())
-    LOG(FATAL) << "fail to open:" << dataset_path + category_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + "/" + category_filename << "\n";
   if (!entity_file.is_open())
-    LOG(FATAL) << "fail to open:" << dataset_path + entity_filename << "\n";
-  if (!entity_category_file.is_open())
-    LOG(FATAL) << "fail to open:" << dataset_path + entity_to_category_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + "/" + entity_filename << "\n";
   if (!hierarchy_id_file.is_open())
-    LOG(FATAL) << "fail to open:" << dataset_path + hierarchy_id_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + "/" + hierarchy_id_filename << "\n";
   if (!level_file.is_open())
-    LOG(FATAL) << "fail to open:" << dataset_path + level_filename << "\n";
+    LOG(FATAL) << "fail to open:" << dataset_path + "/" + level_filename << "\n";
 
-  // TODO: no need of category_file @hzt
-  // 1. Parse Category File
+  // Parse Category File
   while (getline(category_file, line)){
     num_category_++;
   }
   LOG(INFO) << "number of category: " << num_category_;
  
-  // 2. Parse Entity File
+  // Parse Entity File
   while (getline(entity_file, line)){
     num_entity_++;
   }
@@ -88,13 +83,66 @@ void EEEngine::ReadData() {
   // Init category hierarchy
   entity_category_hierarchy_.InitHierarchy(num_entity_, num_category_);
 
-  // NOTE:
+  /// NOTE:
   // entity_id = index in nodes_;
   // category_id = index in nodes_ - num_entity_
 
-  // 3. Parse entity file
-  LOG(INFO) << "Reading " << entity_to_category_filename;
-  counter = 0;
+  //
+  ReadEntityCategoryFile(dataset_path + "/" + entity_to_category_filename);
+
+  // parse hierarchy_id (category)
+  LOG(INFO) << "Reading " << hierarchy_id_filename;
+  while (getline(hierarchy_id_file, line)){
+    istringstream iss(line);
+    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
+    
+    const int category_idx = tokens[0] + num_entity_;
+    Node *category_node 
+        = entity_category_hierarchy_.node(category_idx);
+    for (int idx = 1; idx < tokens.size(); ++idx){
+      const int child_category_idx = tokens[idx] + num_entity_;
+      // add child categories to category
+      category_node->AddChild(child_category_idx);
+      // add parent categories to current category
+      entity_category_hierarchy_.node(child_category_idx)->
+          AddParent(category_idx);
+    }
+  }
+  // parse category levels 
+  LOG(INFO) << "Reading " << level_filename;
+  while (getline(level_file, line)){
+    istringstream iss(line);
+    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
+    Node *category_node 
+        = entity_category_hierarchy_.node(tokens[0] + num_entity_);
+    category_node->set_level(tokens[1]);
+  }
+
+  ReadEntityAncestorFile_bin(dataset_path + "/" + entity_to_ancestor_filename);
+  //ReadEntityAncestorFile_txt(dataset_path + "/" + entity_to_ancestor_filename);
+  //ReadEntityAncestorFile_txt_bac(dataset_path + "/" + entity_to_ancestor_filename);
+
+  ReadEntityPairFile(dataset_path + "/" + pair_filename);
+
+  category_file.close();
+  entity_file.close();
+  hierarchy_id_file.close();
+  level_file.close();
+
+  LOG(INFO) << "Data reading done.";
+
+}
+
+void EEEngine::ReadEntityCategoryFile(const string& filename) {
+  LOG(INFO) << "Reading " << filename;
+
+  ifstream entity_category_file(filename.c_str());
+  if (!entity_category_file.is_open()) {
+    LOG(FATAL) << "fail to open:" << filename;
+  }
+
+  int counter = 0;
+  string line;
   while (getline(entity_category_file, line)) {
     istringstream iss(line);
     vector<int> tokens( 
@@ -118,48 +166,8 @@ void EEEngine::ReadData() {
   }
   cout << endl;
 
-  // 4. Parse hierarchy_id (category)
-  LOG(INFO) << "Reading " << hierarchy_id_filename;
-  while (getline(hierarchy_id_file, line)){
-    istringstream iss(line);
-    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
-    
-    const int category_idx = tokens[0] + num_entity_;
-    Node *category_node 
-        = entity_category_hierarchy_.node(category_idx);
-    for (int idx = 1; idx < tokens.size(); ++idx){
-      const int child_category_idx = tokens[idx] + num_entity_;
-      // add child categories to category
-      category_node->AddChild(child_category_idx);
-      // add parent categories to current category
-      entity_category_hierarchy_.node(child_category_idx)->
-          AddParent(category_idx);
-    }
-  }
- 
-  // category levels 
-  LOG(INFO) << "Reading " << level_filename;
-  while (getline(level_file, line)){
-    istringstream iss(line);
-    vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
-    Node *category_node 
-        = entity_category_hierarchy_.node(tokens[0] + num_entity_);
-    category_node->set_level(tokens[1]);
-  }
-
-  //ReadEntityAncestorFile(dataset_path + "/" + entity_to_ancestor_filename);
-  ReadEntityAncestorFile_bac(dataset_path + "/" + entity_to_ancestor_filename);
-
-  ReadEntityPairFile(dataset_path + "/" + pair_filename);
-
-  category_file.close();
-  entity_file.close();
   entity_category_file.close();
-  hierarchy_id_file.close();
-  level_file.close();
-
-  LOG(INFO) << "Data reading done.";
-
+  CHECK_EQ(counter, num_entity_);
 }
 
 void EEEngine::ReadEntityPairFile(const string& filename) {
@@ -202,7 +210,40 @@ void EEEngine::ReadEntityPairFile(const string& filename) {
   LOG(INFO) << "number of training data: " << num_train_data_ << endl;
 }
 
-void EEEngine::ReadEntityAncestorFile(const string& filename) {
+void EEEngine::ReadEntityAncestorFile_bin(const string& filename) {
+  ifstream ancestor_file(filename.c_str(), ios::in | ios::binary);
+  if (!ancestor_file.is_open()) {
+    LOG(FATAL) << "Fail to open " << filename;
+  }
+
+  LOG(INFO) << "Reading " << filename;
+  int counter = 0;
+  int num_field, entity_id, ancestor_id;
+  float rev_ancestor_weight;
+  for (int line_id = 0; line_id < num_entity_; ++line_id) {
+    ancestor_file.read((char*)&num_field, sizeof(int));
+    ancestor_file.read((char*)&entity_id, sizeof(int));
+    
+    map<int, float>* ancestor_weight_map = new map<int, float>;
+    for (int idx = 1; idx < num_field; ++idx) {
+      ancestor_file.read((char*)&ancestor_id, sizeof(int));
+      ancestor_file.read((char*)&rev_ancestor_weight, sizeof(float));
+      (*ancestor_weight_map)[ancestor_id + num_entity_] 
+          = (1.0 / rev_ancestor_weight);
+    }
+    entity_category_hierarchy_.AddAncestorWeights(
+        entity_id, ancestor_weight_map);
+
+    counter++;
+    if (counter % 200000 == 0) {
+      cout << "." << flush;
+    }
+  }
+  cout << endl;
+  ancestor_file.close();
+}
+
+void EEEngine::ReadEntityAncestorFile_txt(const string& filename) {
   ifstream ancestor_file(filename.c_str());
   if (!ancestor_file.is_open()) {
     LOG(FATAL) << "Fail to open " << filename;
@@ -237,7 +278,12 @@ void EEEngine::ReadEntityAncestorFile(const string& filename) {
   CHECK_EQ(counter, num_entity_);
 #endif
 }
-void EEEngine::ReadEntityAncestorFile_bac(const string& filename) {
+
+void EEEngine::ReadEntityAncestorFile_txt_bac(const string& filename) {
+  //TODO
+  ofstream bin_ancestor_file((filename + ".bin").c_str(), 
+      ios::out | ios::binary);
+
   ifstream ancestor_file(filename.c_str());
   if (!ancestor_file.is_open()) {
     LOG(FATAL) << "Fail to open " << filename;
@@ -250,18 +296,32 @@ void EEEngine::ReadEntityAncestorFile_bac(const string& filename) {
     istringstream iss(line);
     vector<string> tokens((istream_iterator<string>(iss)), 
         istream_iterator<string>());
+
     // entity_idx in heirarchy = entity_id
     const int entity_idx = stoi(tokens[0]);
-    //Node *entity_node = entity_category_hierarchy_.node(entity_idx);
     
-    map<int, float>* ancestor_weight_map = new map<int, float>;
+    // TODO
+    int size = tokens.size();
+    int entity_id = entity_idx;
+    bin_ancestor_file.write((char*)&size, sizeof(int));
+    bin_ancestor_file.write((char*)&entity_id, sizeof(int));
+  
+    int ancestor_idx;
+    float rev_ancestor_weight;
+    //map<int, float>* ancestor_weight_map = new map<int, float>;
     for (int idx = 1; idx < tokens.size(); ++idx) {
       vector<string> ancestor_weight_pair = split(tokens[idx], ':');
-      const int ancestor_idx = stoi(ancestor_weight_pair[0]) + num_entity_;
-      (*ancestor_weight_map)[ancestor_idx] = stof(ancestor_weight_pair[1]);
+      ancestor_idx = stoi(ancestor_weight_pair[0]) + num_entity_;
+      rev_ancestor_weight = stof(ancestor_weight_pair[1]);
+      //(*ancestor_weight_map)[ancestor_idx] = rev_ancestor_weight;
+      
+      //TODO
+      int temp_ancestor_id = ancestor_idx - num_entity_;
+      bin_ancestor_file.write((char*)&temp_ancestor_id, sizeof(int));
+      bin_ancestor_file.write((char*)&rev_ancestor_weight, sizeof(float));
     }
-    entity_category_hierarchy_.AddAncestorWeights(
-        entity_idx, ancestor_weight_map);
+    //entity_category_hierarchy_.AddAncestorWeights(
+    //    entity_idx, ancestor_weight_map);
 
     ++counter;
     if (counter % 200000 == 0) {
@@ -270,6 +330,9 @@ void EEEngine::ReadEntityAncestorFile_bac(const string& filename) {
   }
   cout << endl;
   ancestor_file.close();
+
+  //TODO
+  bin_ancestor_file.close();
 
 #ifdef DEBUG
   CHECK_EQ(counter, num_entity_);

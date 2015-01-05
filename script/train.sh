@@ -8,9 +8,9 @@ progname=ee_main
 prog_path=${app_dir}/build/tools/${progname}
 
 # Data
-#dataset_name=whole_parsed
+dataset_name=whole
 #dataset_name=tech_parsed
-dataset_name=apple
+#dataset_name=apple
 dataset_path="${app_dir}/../../EEEL/data/${dataset_name}"
 
 ## Parameters
@@ -25,12 +25,12 @@ num_iter_per_eval=20
 batch_size=100
 
 # solver parameters
-learning_rate=0.01
+learning_rate=10
 num_neg_sample=10
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-snapshot=1000
+snapshot=2000
 #resume_path=""
 #resume_iter=4000
 
