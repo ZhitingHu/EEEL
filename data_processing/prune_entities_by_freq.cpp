@@ -33,7 +33,7 @@ int main(){
    set<string> mentioned_entities;
 
    // Open files
-   string dataset_path = "whole_pruned/";
+   string dataset_path = "/home/zhitingh/ml_proj/EEEL/data/apple/pruned_admin_and_meaningless_entities/";
 
    string entity_filename = "entity.txt";
    string entity_to_category_filename = "entity2category.txt";
@@ -45,7 +45,7 @@ int main(){
    ifstream entity_category_file((dataset_path + "/" + entity_to_category_filename).c_str());
    ifstream pair_file((dataset_path + "/" + pair_filename).c_str());
    ifstream entity_freq_file((dataset_path + "/" + entity_freq_filename).c_str());
-   ifstream mention_to_entity_file((dataset_path + "/" + mention_to_entity_filename).c_str());
+   ifstream mention_to_entity_file("/home/zhitingh/ml_proj/EEEL/data/entity_linking/mention_entity_map");
 
    ofstream remained_entity_file((dataset_path + "/entity_remained.txt").c_str());
    ofstream new_entity_category_file((dataset_path + "/new_" + entity_to_category_filename).c_str());
@@ -95,6 +95,7 @@ int main(){
        new_entity_id++;
        if (freq <= Freq_Thd) {
          mentioned_entity_with_low_freq_file << entity_name << "\t" << freq << endl;
+         num_of_mentioned_entity_with_low_freq++;
        }
      } else {
        cnt++;
@@ -120,26 +121,26 @@ int main(){
    }
 
    // pair file
-   //cnt = 0;
-   //map<int, int>::const_iterator map_it_1, map_it_2;
-   //while (getline(pair_file, line)) {
-   //  istringstream iss(line);
-   //  vector<int> tokens((std::istream_iterator<int>(iss)), (std::istream_iterator<int>()) );
-   //  
-   //  if (tokens.size() != 3){
-   //     cout << "Err: Pair format should with len 3" << endl;
-   //     break;
-   //  }
-   //  
-   //  map_it_1 = old_entity_id_to_new_id.find(tokens[0]);
-   //  map_it_2 = old_entity_id_to_new_id.find(tokens[1]);
-   //  if (map_it_1 != old_entity_id_to_new_id.end() 
-   //      && map_it_2 != old_entity_id_to_new_id.end()) {
-   //    new_pair_file << map_it_1->second << "\t" << map_it_2->second << "\t" << tokens[3] << endl;
-   //    cnt++;
-   //  }
-   //}
-   //cout << "Num of pairs " << cnt << endl;
+   cnt = 0;
+   map<int, int>::const_iterator map_it_1, map_it_2;
+   while (getline(pair_file, line)) {
+     istringstream iss(line);
+     vector<int> tokens((std::istream_iterator<int>(iss)), (std::istream_iterator<int>()) );
+     
+     if (tokens.size() != 3){
+        cout << "Err: Pair format should with len 3" << endl;
+        break;
+     }
+     
+     map_it_1 = old_entity_id_to_new_id.find(tokens[0]);
+     map_it_2 = old_entity_id_to_new_id.find(tokens[1]);
+     if (map_it_1 != old_entity_id_to_new_id.end() 
+         && map_it_2 != old_entity_id_to_new_id.end()) {
+       new_pair_file << map_it_1->second << "\t" << map_it_2->second << "\t" << tokens[2] << endl;
+       cnt++;
+     }
+   }
+   cout << "Num of pairs " << cnt << endl;
 
    // close files
    entity_file.close();

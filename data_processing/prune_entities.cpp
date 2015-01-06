@@ -42,8 +42,8 @@ int main(){
    map<int, int> idx_map;
    
    // Open files
-   string dataset_path = "whole";
-   string parsed_dataset_path = "whole_pruned";
+   string dataset_path = "/home/zhitingh/ml_proj/EEEL/data/apple/origin";
+   string parsed_dataset_path = "/home/zhitingh/ml_proj/EEEL/data/apple/pruned_admin_and_meaningless_entities";
 
    string effective_entity_ids_filename = "effective_entity_ids.txt";
    //string category_filename = "categories.txt";
@@ -128,35 +128,35 @@ int main(){
    cout << "Last one:" << idx_map[idx_map.size()-1] << endl;
 
    // entity-category file
-   //while (getline(entity_category_file, line)){
-   //  istringstream iss(line);
-   //  vector<int> tokens( (std::istream_iterator<int>(iss)), (std::istream_iterator<int>()) );
-   // 
-   //  int old_entity_id = tokens[0];
-   //  int new_entity_id = idx_map[old_entity_id];
-   //  if (new_entity_id != -1) {
-   //    parsed_entity_category_file << new_entity_id << "\t";
-   //    for (unsigned int token_idx = 1; token_idx < tokens.size(); ++token_idx){
-   //       parsed_entity_category_file << tokens[token_idx] << "\t";
-   //    }
-   //    parsed_entity_category_file << endl;
-   //  }
-   //}
+   while (getline(entity_category_file, line)){
+     istringstream iss(line);
+     vector<int> tokens( (std::istream_iterator<int>(iss)), (std::istream_iterator<int>()) );
+    
+     int old_entity_id = tokens[0];
+     int new_entity_id = idx_map[old_entity_id];
+     if (new_entity_id != -1) {
+       parsed_entity_category_file << new_entity_id << "\t";
+       for (unsigned int token_idx = 1; token_idx < tokens.size(); ++token_idx){
+          parsed_entity_category_file << tokens[token_idx] << "\t";
+       }
+       parsed_entity_category_file << endl;
+     }
+   }
 
    //// pair File
-   //while (getline(pair_file, line)){
-   //  istringstream iss(line);
-   //  vector<int> tokens( (std::istream_iterator<int>(iss)), (std::istream_iterator<int>()) );
-   //  
-   //  if (tokens.size() != 3){
-   //    cout << "Err: Pair format should with len 3" << endl;
-   //    break;
-   //  }
+   while (getline(pair_file, line)){
+     istringstream iss(line);
+     vector<int> tokens( (std::istream_iterator<int>(iss)), (std::istream_iterator<int>()) );
+     
+     if (tokens.size() != 3){
+       cout << "Err: Pair format should with len 3" << endl;
+       break;
+     }
 
-   //  if (idx_map[tokens[0]] != -1 && idx_map[tokens[1]] != -1) {
-   //    parsed_pair_file << idx_map[tokens[0]] << "\t" << idx_map[tokens[1]] << "\t" << tokens[2] << endl;
-   //  }
-   //}
+     if (idx_map[tokens[0]] != -1 && idx_map[tokens[1]] != -1) {
+       parsed_pair_file << idx_map[tokens[0]] << "\t" << idx_map[tokens[1]] << "\t" << tokens[2] << endl;
+     }
+   }
 
    entity_file.close();
    entity_category_file.close();

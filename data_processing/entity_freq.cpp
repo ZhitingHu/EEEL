@@ -10,8 +10,6 @@
 
 using namespace std;
 
-#define Freq_Thd 0
-
 struct sort_val {
    bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right) {
        return left.second > right.second;
@@ -25,7 +23,7 @@ int main(){
    map<int, string> entity_id_name; 
 
    // Open files
-   string dataset_path = "/home/zhitingh/ml_proj/EEEL/data/whole_pruned/";
+   string dataset_path = "/home/zhitingh/ml_proj/EEEL/data/apple/pruned_admin_and_meaningless_entities/";
    string entity_filename = "entity.txt";
    string pair_filename = "pair.txt";
    string pair_TF_filename = "pair_term_freq.txt";

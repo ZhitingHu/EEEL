@@ -15,7 +15,7 @@ int main(){
    string line;
    vector<string> lines;
  
-   string path = "/home/zhitingh/ml_proj/EEEL/data/tech_parsed/";
+   string path = "/home/zhitingh/ml_proj/EEEL/data/apple/";
    string pair_filename = "pair.txt";
    string shuffled_pair_filename = "shuffled_pair.txt";
 
