@@ -47,15 +47,18 @@ public:
     category_node_weights_[category_id] += weight;
   }
 
-  void ScaleCategoryWeights(const float scale) {
+  //TODO
+  void ScaleCategoryWeights(const float scale, const float scale_2) {
     map<int, float>::iterator it = category_node_weights_.begin();
     for (; it != category_node_weights_.end(); ++it) {
-      it->second *= scale; //weighted
+      it->second *= scale * scale_2; //weighted
     }
+    scale_2_ = scale_2;
   }
+  float scale_2() { return scale_2_; }
 
   vector<int>& category_nodes() { return category_nodes_; }
-  const float& category_node_weight(const int category_id) {
+  const float category_node_weight(const int category_id) {
 #ifdef DEBUG
     CHECK(category_node_weights_.find(category_id) 
         != category_node_weights_.end());
@@ -76,6 +79,9 @@ private:
 
   // aggregrated distance metrix
   Blob* aggr_dist_metric_;
+  
+  //TODO
+  float scale_2_;
 };
 
 }  // namespace entity

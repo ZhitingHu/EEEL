@@ -44,11 +44,12 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 
   Path* path = new Path();
   float weight_sum = 0;
+  float ca_weight_sum = 0;
 
   ExpandPathFromCommonAncestors(entity_from, common_ancestors, 
-      path, weight_sum);
+      path, weight_sum, ca_weight_sum);
   ExpandPathFromCommonAncestors(entity_to, common_ancestors, 
-      path, weight_sum);
+      path, weight_sum, ca_weight_sum);
 
   //const map<int, float>& entity_from_ancestor_weights 
   //    = *entity_ancestor_weights_[entity_from]; 
@@ -106,8 +107,11 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 
 #ifdef DEBUG
   CHECK_GT(weight_sum, 0);
+  CHECK_GT(ca_weight_sum, 0);
 #endif
-  path->ScaleCategoryWeights(1.0 / (weight_sum * sqrt(num_ca))); 
+  //LOG(INFO) << ca_weight_sum << " / " << num_ca << " / " << weight_sum;
+  //path->ScaleCategoryWeights(1.0 / (weight_sum * /* sqrt(num_ca) */ ca_weight_sum)); 
+  path->ScaleCategoryWeights(1.0 / weight_sum, 1.0 / ca_weight_sum); 
 
   //LOG(INFO) << "expand common ancestor: "
   //    << ((double)(clock() - t_start) / CLOCKS_PER_SEC);
@@ -118,7 +122,8 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 
 
 void Hierarchy::ExpandPathFromCommonAncestors(const int entity_idx,
-    const set<int>& common_ancestors, Path* path, float& weight_sum) {
+    const set<int>& common_ancestors, Path* path, float& weight_sum,
+    float& ca_weight_sum) {
 
   const map<int, float>& entity_ancestor_weights 
       = *entity_ancestor_weights_[entity_idx];
@@ -134,12 +139,13 @@ void Hierarchy::ExpandPathFromCommonAncestors(const int entity_idx,
   // expand from common ancestors
   set<int>::const_iterator set_it = common_ancestors.begin();
   for (; set_it != common_ancestors.end(); ++set_it) {
+    ca_weight_sum += entity_ancestor_weights.find(*set_it)->second;
     unprocessed_nodes.push(*set_it);
   }
   while (!unprocessed_nodes.empty()) {
     cur_idx = unprocessed_nodes.front();
     unprocessed_nodes.pop();
-    // check if being processed, 'cause it's a DAG
+    // check if being processed, 'cause it is a DAG
     if (processed_nodes.find(cur_idx) != processed_nodes.end()) {
       continue;
     } 

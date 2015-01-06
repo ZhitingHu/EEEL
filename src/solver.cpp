@@ -514,7 +514,7 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
 #ifdef DEBUG
   CHECK(minibatch.size() != 0);
 #endif
-  float update_coeff =/* (-1.0) **/ learning_rate_ / minibatch.size();
+  float update_coeff = learning_rate_ / minibatch.size();
   for (int epoch = 0; epoch < num_epoch_on_batch_; ++epoch) {
     // Refresh path aggregated distance metric
     for (int d = 0; d < minibatch.size(); ++d) {
@@ -638,6 +638,7 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
         CHECK_LT(*set_it_, categories_.size());
 #endif
         categories_[*set_it_]->Accumulate(category_grads_[*set_it_], update_coeff);
+        categories_[*set_it_]->Rectify();
         // clear gradients
         category_grads_[*set_it_]->ClearData();
       }
@@ -647,7 +648,7 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
       //    minibatch[0]->category_path()) << "\t" 
       //    <<  ComputeDist(minibatch[0]->entity_i(), minibatch[0]->neg_entity(0),
       //    minibatch[0]->neg_category_path(0)); 
-   
+      
     } // end of optimizing category embedding 
     //LOG(ERROR) << "optimize cate vector done."; 
   } // end of epoches

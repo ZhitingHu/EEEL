@@ -106,6 +106,12 @@ public:
     }
   }
   
+  void Rectify() {
+    for (int idx = 0; idx < count_; ++idx) {
+      data_[idx] = (data_[idx] > 0 ? data_[idx] : 0);
+    }
+  }
+
   // test 
   void CheckNaN() {
     for (int idx = 0; idx < count_; ++idx) {

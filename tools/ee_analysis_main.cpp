@@ -26,7 +26,7 @@ DEFINE_string(dataset_path, "data/tech/", "data path");
 DEFINE_string(output_file_prefix, "output/", "Results go here.");
 DEFINE_string(category_filename, "categories.txt", "category filename");
 DEFINE_string(entity_filename, "entity.txt", "entity filename");
-DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.txt", "entity-ancestor filename");
+DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.bin", "entity-ancestor filename");
 DEFINE_string(entity_to_category_filename, "entity2category.txt", "entity-category filename");
 DEFINE_string(hierarchy_filename, "hierarchy.txt", "hierarchy filename");
 DEFINE_string(hierarchy_id_filename, "hierarchy_id.txt", "hierarchy id filename");
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   entity::Analyst analyst(FLAGS_resume_path, FLAGS_resume_iter);
 
   //vector<int> candidate_entities = {9336, 397504, 719040, 1480281, 131};
-  vector<int> candidate_entities = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 3399};
+  vector<int> candidate_entities = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20};
   analyst.ComputeNearestNeibors(40, candidate_entities, 
       FLAGS_output_file_prefix);
 

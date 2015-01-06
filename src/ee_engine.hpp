@@ -29,6 +29,8 @@ public:
   Hierarchy* entity_category_hierarchy() { 
     return &entity_category_hierarchy_; 
   }
+  
+  Dataset* train_data() { return &train_data_; }  
 
 private:    // private functions
 

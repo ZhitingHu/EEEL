@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include "string_util.hpp"
 #include "analyst.hpp"
+#include "dataset.hpp"
 
 #include <string>
 #include <fstream>
@@ -20,7 +21,7 @@ namespace entity {
 
 struct sort_comparator {
   bool operator()(const std::pair<int,float> &lhs, const std::pair<int,float> &rhs) {
-      return lhs.second > rhs.second;
+      return lhs.second < rhs.second;
   }
 };
 
@@ -39,6 +40,7 @@ void Analyst::ComputeNearestNeibors(const int top_k,
   output.open((output_path + "/nearest_neibors").c_str());
   CHECK(output.is_open());
 
+  Dataset* train_data = ee_engine_->train_data();
   int counter = 0;
 //#ifdef OPENMP
 //  #pragma omp parallel for
@@ -54,8 +56,25 @@ void Analyst::ComputeNearestNeibors(const int top_k,
   {
     output << e_id << " ";
     for (int rank = 0; rank < top_k; ++rank) {
+      // TODO
+      int occur_cnt = 0;
+      if (train_data->positive_entities(e_id).find(nearest_entities[rank].first)
+          != train_data->positive_entities(e_id).end()) {
+        occur_cnt++;
+      }
+      if (train_data->positive_entities(nearest_entities[rank].first).find(e_id)
+          != train_data->positive_entities(nearest_entities[rank].first).end()) {
+        occur_cnt++;
+      }
+      
+      Path* path = ee_engine_->entity_category_hierarchy()->
+          FindPathBetweenEntities(e_id, nearest_entities[rank].first);
+
       output << nearest_entities[rank].first << ":" 
-          << nearest_entities[rank].second << " ";
+          << nearest_entities[rank].second << ":" << occur_cnt << ":" 
+          << path->scale_2() << " ";
+      
+      delete path;
     }
     output << endl;
     counter++;
@@ -101,6 +120,5 @@ void Analyst::ComputeEntityNearestNeibors(const int entity, const int top_k,
   std::partial_sort(nearest_entities.begin(), nearest_entities.begin() + top_k, 
       nearest_entities.end(), sort_comparator());
 }
-
 
 } // namespace entity

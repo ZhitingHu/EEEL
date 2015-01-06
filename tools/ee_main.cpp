@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
   // read data
   ee_engine.ReadData();
   // training
-  //ee_engine.Start();
+  ee_engine.Start();
 
   LOG(INFO) << "Entity Embedding finished and shut down!";
  
