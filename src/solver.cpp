@@ -38,6 +38,7 @@ Solver::Solver(const int num_entity, const int num_category) :
   num_epoch_on_batch_ = context.get_int32("num_epoch_on_batch");
   num_iter_on_entity_ = context.get_int32("num_iter_on_entity");
   num_iter_on_category_ = context.get_int32("num_iter_on_category");
+  dim_embedding_ = context.get_int32("dim_embedding");
 
 //#ifndef OPENMP    
   for (int i = 0; i < num_entity_; ++i) {
