@@ -19,14 +19,14 @@ dim_embedding=100;
 distance_metric_mode="DIAG";
 
 # training engine parameters
-num_iter=76000 # = 1 epoches
-eval_interval=800
+num_iter=176000 # = 1 epoches
+eval_interval=1600
 num_iter_per_eval=20
 batch_size=500
 
 # solver parameters
 learning_rate=50
-num_neg_sample=10
+num_neg_sample=5
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
@@ -37,7 +37,7 @@ snapshot=16000
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-rectify"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-whole-min-ca"
 #rm -rf ${output_dir}
 mkdir -p ${output_dir}
 log_dir=${output_dir}/logs

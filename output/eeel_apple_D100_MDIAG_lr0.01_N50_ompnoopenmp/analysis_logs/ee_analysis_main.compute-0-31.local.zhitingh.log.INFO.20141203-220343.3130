@@ -1,4 +1,0 @@
-Log file created at: 2014/12/03 22:03:43
-Running on machine: compute-0-31.local
-Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-I1203 22:03:43.947553  3130 ee_engine.cpp:88] number of category: 257

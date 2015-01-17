@@ -5,6 +5,7 @@
 #include <utility>
 #include <math.h>
 #include <time.h>
+#include <algorithm>
 
 namespace entity {
 
@@ -44,12 +45,13 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 
   Path* path = new Path();
   float weight_sum = 0;
-  float ca_weight_sum = 0;
+  //float ca_weight_sum = 0;
+  map<int, float> ca_weights;
 
   ExpandPathFromCommonAncestors(entity_from, common_ancestors, 
-      path, weight_sum, ca_weight_sum);
+      path, weight_sum, ca_weights);
   ExpandPathFromCommonAncestors(entity_to, common_ancestors, 
-      path, weight_sum, ca_weight_sum);
+      path, weight_sum, ca_weights);
 
   //const map<int, float>& entity_from_ancestor_weights 
   //    = *entity_ancestor_weights_[entity_from]; 
@@ -107,11 +109,19 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 
 #ifdef DEBUG
   CHECK_GT(weight_sum, 0);
-  CHECK_GT(ca_weight_sum, 0);
+  //CHECK_GT(ca_weight_sum, 0);
+  //CHECK_GT(max_ca_weight, 0);
+  CHECK_EQ(ca_weights.size(), common_ancestors.size());
 #endif
   //LOG(INFO) << ca_weight_sum << " / " << num_ca << " / " << weight_sum;
   //path->ScaleCategoryWeights(1.0 / (weight_sum * /* sqrt(num_ca) */ ca_weight_sum)); 
-  path->ScaleCategoryWeights(1.0 / weight_sum, 1.0 / ca_weight_sum); 
+  float max_ca_weight = 0;
+  map<int, float>::const_iterator it = ca_weights.begin();
+  for (; it != ca_weights.end(); ++it) {
+    max_ca_weight = max(it->second, max_ca_weight);
+  }
+
+  path->ScaleCategoryWeights(1.0 / weight_sum, 1.0 / max_ca_weight); 
 
   //LOG(INFO) << "expand common ancestor: "
   //    << ((double)(clock() - t_start) / CLOCKS_PER_SEC);
@@ -123,7 +133,7 @@ Path* Hierarchy::FindPathBetweenEntities(int entity_from, int entity_to) {
 
 void Hierarchy::ExpandPathFromCommonAncestors(const int entity_idx,
     const set<int>& common_ancestors, Path* path, float& weight_sum,
-    float& ca_weight_sum) {
+    map<int, float>& ca_weights) {
 
   const map<int, float>& entity_ancestor_weights 
       = *entity_ancestor_weights_[entity_idx];
@@ -139,7 +149,8 @@ void Hierarchy::ExpandPathFromCommonAncestors(const int entity_idx,
   // expand from common ancestors
   set<int>::const_iterator set_it = common_ancestors.begin();
   for (; set_it != common_ancestors.end(); ++set_it) {
-    ca_weight_sum += entity_ancestor_weights.find(*set_it)->second;
+    //ca_weight_sum += entity_ancestor_weights.find(*set_it)->second;
+    ca_weights[*set_it] += entity_ancestor_weights.find(*set_it)->second;
     unprocessed_nodes.push(*set_it);
   }
   while (!unprocessed_nodes.empty()) {

@@ -86,7 +86,7 @@ private:
 
   void ExpandPathFromCommonAncestors(const int entity_idx,
       const set<int>& common_ancestors, Path* path, float& weight_sum,
-      float& ca_weight_sum);
+      map<int, float>& ca_weights);
 
 private:
   // [0, num_entity): entity nodes
