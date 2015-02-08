@@ -19,25 +19,25 @@ dim_embedding=100;
 distance_metric_mode="DIAG";
 
 # training engine parameters
-num_iter=176000 # = 1 epoches
+num_iter=528000 # = 3 epoches
 eval_interval=1600
 num_iter_per_eval=20
 batch_size=500
 
 # solver parameters
-learning_rate=50
+learning_rate=2
 num_neg_sample=5
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-snapshot=16000
-#resume_path="/home/zhitingh/ml_proj/EEEL_dim100/output/eeel_whole_parsed_D100_MDIAG_lr0.01_N10_B500-8000"
-#resume_iter=40000
+snapshot=32000
+resume_path="/home/zhitingh/ml_proj/EEEL_dim100_whole_min_ca/output/eeel_whole_D100_MDIAG_lr10_N5_B500-whole-min-ca-336000"
+resume_iter=352000
 
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-whole-min-ca"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-whole-min-ca-336000"
 #rm -rf ${output_dir}
 mkdir -p ${output_dir}
 log_dir=${output_dir}/logs
@@ -67,5 +67,5 @@ GLOG_vmodule="" \
     --dataset_path $dataset_path \
     --output_file_prefix $output_dir \
     --snapshot $snapshot \
-    #--resume_path $resume_path \
-    #--resume_iter $resume_iter
+    --resume_path $resume_path \
+    --resume_iter $resume_iter
