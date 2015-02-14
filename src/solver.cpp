@@ -40,15 +40,33 @@ Solver::Solver(const int num_entity, const int num_category) :
   num_iter_on_category_ = context.get_int32("num_iter_on_category");
   dim_embedding_ = context.get_int32("dim_embedding");
 
-//#ifndef OPENMP    
   for (int i = 0; i < num_entity_; ++i) {
-    entity_grads_.push_back(new Blob(entity::Context::dim_embedding()));
+    entity_grads_.push_back(new Blob(dim_embedding_));
   }
   for (int i = 0; i < num_category_; ++i) {
-    category_grads_.push_back(new Blob(
-        entity::Context::dim_embedding(), entity::Context::dim_embedding()));
+    category_grads_.push_back(new Blob(dim_embedding_, dim_embedding_));
   }
-//#endif
+
+  const string& solver_type = context.get_string("solver_type");
+  if (solver_type == "SGD") {
+    solver_type_ = SolverType::SGD;
+  } else {
+    if (solver_type == "MOMEN") {
+      solver_type_ = SolverType::MOMEN;
+      momentum_ = context.get_double("momentum");
+    } else if (solver_type == "ADAGRAD") {
+      solver_type_ = SolverType::ADAGRAD;
+    } else {
+      LOG(FATAL) << "Unkown Solver Type " << solver_type;
+    }
+    for (int i = 0; i < num_entity_; ++i) {
+      entity_update_history_.push_back(new Blob(dim_embedding_));
+    }
+    for (int i = 0; i < num_category_; ++i) {
+      category_update_history_.push_back(new Blob(
+          dim_embedding_, dim_embedding_));
+    }
+  }
 }
 
 Solver::~Solver() {
@@ -101,6 +119,17 @@ void Solver::Snapshot(const string& output_path, const int iter) {
   oss.clear();
   oss << output_path << "/category_vectors_" << iter;
   SnapshotBlobsBinary(oss.str(), categories_);  
+
+  if (solver_type_ == SolverType::MOMEN || solver_type_ == SolverType::ADAGRAD) {
+    oss.str("");
+    oss.clear();
+    oss << output_path << "/entity_update_history_" << iter;
+    SnapshotBlobsBinary(oss.str(), entity_update_history_);  
+    oss.str("");
+    oss.clear();
+    oss << output_path << "/category_update_history_" << iter;
+    SnapshotBlobsBinary(oss.str(), category_update_history_);  
+  }
 }
 
 void Solver::SnapshotParameters(const string& param_filename) {
@@ -109,6 +138,7 @@ void Solver::SnapshotParameters(const string& param_filename) {
   param_snapshot << dim_embedding_ << endl;
   param_snapshot << num_entity_ << endl;
   param_snapshot << num_category_ << endl;   
+  param_snapshot << solver_type_ << endl;   
   param_snapshot.close();
 }
 
@@ -186,6 +216,20 @@ void Solver::Restore(const string& snapshot_path, const int iter) {
   //RestoreBlobs(oss.str(), categories_);  
   RestoreBlobsBinary(oss.str(), num_category_, categories_);  
   CHECK_EQ(num_category_, categories_.size());
+
+  if (restore_history_) {
+    oss.str("");
+    oss.clear();
+    oss << snapshot_path << "/entity_update_history_" << iter;
+    RestoreBlobsBinary(oss.str(), num_entity_, entity_update_history_);  
+    CHECK_EQ(num_entity_, entity_update_history_.size());
+
+    oss.str("");
+    oss.clear();
+    oss << snapshot_path << "/category_update_history_" << iter;
+    RestoreBlobsBinary(oss.str(), num_category_, category_update_history_);  
+    CHECK_EQ(num_category_, category_update_history_.size());
+  }
 }
 
 void Solver::RestoreParameters(const string& param_filename) {
@@ -207,7 +251,20 @@ void Solver::RestoreParameters(const string& param_filename) {
   param_snapshot >> num_category;   
   num_category_ = (num_category_ == -1 ? num_category : num_category_);
   CHECK_EQ(num_category, num_category_) << " num_category not consistent!";
-  
+
+  restore_history_ = false; 
+  int solver_type;
+  if (param_snapshot >> solver_type) {
+    if ((solver_type == SolverType::MOMEN || solver_type == SolverType::ADAGRAD)) {
+      if (solver_type == solver_type_) {
+        restore_history_ = true;
+      } else {
+        LOG(WARNING) << "Snaptshot solver type (" << solver_type 
+            << ") != current solver type (" << solver_type_ 
+            << "). History snapshot abandomed";
+      }
+    }
+  } 
   param_snapshot.close();
 }
 
@@ -501,6 +558,107 @@ void Solver::ComputeCategoryGradient(Datum* datum) {
   }
 }
 
+void Solver::SGDUpdateEntity(const float lr) {
+  set_it_ = updated_entities_.begin();
+  for (; set_it_ != updated_entities_.end(); ++set_it_) {
+    const int entity_id = *set_it_;
+    entities_[entity_id]->Accumulate(entity_grads_[entity_id], lr);
+    // Projection
+    entities_[entity_id]->Normalize();
+    // Clear gradients
+    entity_grads_[entity_id]->ClearData();
+  }
+}
+void Solver::SGDUpdateCategory(const float lr) {
+  set_it_ = updated_categories_.begin();
+  for (; set_it_ != updated_categories_.end(); ++set_it_) {
+    const int cate_id = *set_it_;
+#ifdef DEBUG
+   CHECK_LT(cate_id, category_grads_.size());
+   CHECK_LT(cate_id, categories_.size());
+#endif
+   categories_[cate_id]->Accumulate(category_grads_[cate_id], lr);
+   categories_[cate_id]->Rectify();
+   // Clear gradients
+   category_grads_[cate_id]->ClearData();
+ }
+}
+void Solver::MomenUpdateEntity(const float lr) {
+  set_it_ = updated_entities_.begin();
+  for (; set_it_ != updated_entities_.end(); ++set_it_) {
+    const int entity_id = *set_it_;
+    entity_update_history_[entity_id]->Accumulate(
+        entity_grads_[entity_id], lr, momentum_);
+    entities_[entity_id]->Accumulate(entity_update_history_[entity_id]);
+    // Projection
+    entities_[entity_id]->Normalize();
+    // clear gradidents
+    entity_grads_[entity_id]->ClearData();
+  }
+}
+void Solver::MomenUpdateCategory(const float lr) {
+  set_it_ = updated_categories_.begin();
+  for (; set_it_ != updated_categories_.end(); ++set_it_) {
+    const int cate_id = *set_it_;
+#ifdef DEBUG
+   CHECK_LT(cate_id, category_grads_.size());
+   CHECK_LT(cate_id, categories_.size());
+#endif
+    category_update_history_[cate_id]->Accumulate(
+        entity_grads_[cate_id], lr, momentum_);
+    categories_[cate_id]->Accumulate(category_update_history_[cate_id]);
+    categories_[cate_id]->Rectify();
+    // Clear gradients
+    category_grads_[cate_id]->ClearData();
+  }
+}
+void Solver::AdaGradUpdateEntity(const float lr) {
+  Blob update_temp(dim_embedding_);
+  set_it_ = updated_entities_.begin();  
+  for (; set_it_ != updated_entities_.end(); ++set_it_) {
+    const int entity_id = *set_it_;
+    const int dim = entity_grads_[entity_id]->count();
+    entity::VectorPow(update_temp.mutable_data(), 
+        entity_grads_[entity_id]->data(), dim, 2.0);
+    entity::VectorAdd(entity_update_history_[entity_id]->mutable_data(),
+        update_temp.data(), dim);
+    for (int i = 0; i < dim; ++i) {
+      update_temp.mutable_data()[i] = lr * entity_grads_[entity_id]->data_at(i) 
+          / (sqrt(entity_update_history_[entity_id]->data_at(i)) + 1e-7);
+    }
+    entities_[entity_id]->Accumulate(&update_temp);
+    // Projection
+    entities_[entity_id]->Normalize();
+    // Clear gradients
+    entity_grads_[entity_id]->ClearData();
+  }
+}
+void Solver::AdaGradUpdateCategory(const float lr) {
+  Blob update_temp(dim_embedding_, dim_embedding_);
+  set_it_ = updated_categories_.begin();
+  for (; set_it_ != updated_categories_.end(); ++set_it_) {
+    const int cate_id = *set_it_;
+    const int dim = category_grads_[cate_id]->count();
+#ifdef DEBUG
+    CHECK_LT(cate_id, category_grads_.size());
+    CHECK_LT(cate_id, categories_.size());
+#endif
+    entity::VectorPow(update_temp.mutable_data(), 
+        category_grads_[cate_id]->data(), dim, 2.0);
+    entity::VectorAdd(category_update_history_[cate_id]->mutable_data(),
+        update_temp.data(), dim);
+    for (int i = 0; i < dim; ++i) {
+      update_temp.mutable_data()[i] = lr * category_grads_[cate_id]->data()[i]
+          / (sqrt(category_update_history_[cate_id]->data()[i]) + 1e-7);
+    }
+    categories_[cate_id]->Accumulate(&update_temp);
+    // Projection
+    categories_[cate_id]->Rectify();
+    // Clear gradients
+    category_grads_[cate_id]->ClearData();
+  }
+}
+
 void Solver::Solve(const vector<Datum*>& minibatch) {
 //#ifdef OPENMP
 //  Solve_omp(minibatch);
@@ -568,23 +726,17 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
         }
       } // end of minibatch
 
-      // Update entity vectors
-      set_it_ = updated_entities_.begin();
-      for (; set_it_ != updated_entities_.end(); ++set_it_) { 
-        entities_[*set_it_]->Accumulate(entity_grads_[*set_it_], update_coeff);
-        // Projection
-        entities_[*set_it_]->Normalize();
-        // clear gradidents
-        entity_grads_[*set_it_]->ClearData();
+      /// Update entity vectors
+      if (solver_type_ == SolverType::SGD) {
+        SGDUpdateEntity(update_coeff);
+      } else if (solver_type_ == SolverType::MOMEN) {
+        MomenUpdateEntity(update_coeff);
+      } else if (solver_type_ == SolverType::ADAGRAD) {
+        AdaGradUpdateEntity(update_coeff);
+      } else {
+        LOG(FATAL) << "Unkown Solver Type " << solver_type_;
       }
-
-      // TODO
-      //LOG(INFO) << ComputeDist(minibatch[0]->entity_i(), minibatch[0]->entity_o(), 
-      //    minibatch[0]->category_path()) << "\t" 
-      //    <<  ComputeDist(minibatch[0]->entity_i(), minibatch[0]->neg_entity(0),
-      //    minibatch[0]->neg_category_path(0)); 
     } // end of optimizing entity embedding
-
 
     //LOG(ERROR) << "optimize entity vector done."; 
 
@@ -595,7 +747,6 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
 #ifdef DEBUG
           CHECK(datum);
 #endif        
-
         if (iter > 0) {
           // Refresh path aggregated distance metric
 #ifdef DEBUG
@@ -631,17 +782,15 @@ void Solver::Solve_single(const vector<Datum*>& minibatch) {
         }
       } // end of minibatch
 
-      //Update category metrics
-      set_it_ = updated_categories_.begin();
-      for (; set_it_ != updated_categories_.end(); ++set_it_) {
-#ifdef DEBUG
-        CHECK_LT(*set_it_, category_grads_.size());
-        CHECK_LT(*set_it_, categories_.size());
-#endif
-        categories_[*set_it_]->Accumulate(category_grads_[*set_it_], update_coeff);
-        categories_[*set_it_]->Rectify();
-        // clear gradients
-        category_grads_[*set_it_]->ClearData();
+      /// Update category metrics
+      if (solver_type_ == SolverType::SGD) {
+        SGDUpdateCategory(update_coeff);
+      } else if (solver_type_ == SolverType::MOMEN) {
+        MomenUpdateCategory(update_coeff);
+      } else if (solver_type_ == SolverType::ADAGRAD) {
+        AdaGradUpdateCategory(update_coeff);
+      } else {
+        LOG(FATAL) << "Unkown Solver Type " << solver_type_;
       }
 
       // TODO

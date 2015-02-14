@@ -9,7 +9,10 @@
 namespace entity {
 
 // a = a + b.
-void VectorAdd(float* a, const float* b, int dim);
+void VectorAdd(float* a, const float* b, const int dim);
+// point-wise power
+// a = b.^power
+void VectorPow(float* a, const float* b, const int dim, const float power);
 
 // Set b = W * a. W is of size [m x n], len(a) = n, len(b) = m. It assumes a
 // and b have been allocated.

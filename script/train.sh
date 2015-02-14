@@ -25,13 +25,16 @@ num_iter_per_eval=20
 batch_size=500
 
 # solver parameters
-learning_rate=2
+solver_type="ADAGRAD"
+#momentum=0.9
+learning_rate=10
 num_neg_sample=5
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
 snapshot=32000
-resume_path="/home/zhitingh/ml_proj/EEEL_dim100_whole_min_ca/output/eeel_whole_D100_MDIAG_lr10_N5_B500-whole-min-ca-336000"
+#
+resume_path="/home/zhitingh/ml_proj/EEEL_dim100_whole_min_ca/output/eeel_whole_D100_MDIAG_lr0.2_N5_B500-whole-min-ca-336000"
 resume_iter=352000
 
 # Output
@@ -59,6 +62,7 @@ GLOG_vmodule="" \
     --eval_interval $eval_interval \
     --num_iter_per_eval $num_iter_per_eval \
     --batch_size $batch_size \
+    --solver_type $solver_type \
     --learning_rate $learning_rate \
     --num_neg_sample $num_neg_sample \
     --num_epoch_on_batch $num_epoch_on_batch \

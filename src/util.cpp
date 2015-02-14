@@ -2,9 +2,14 @@
 
 namespace entity {
 
-void VectorAdd(float* a, const float* b, int dim) {
-	for (int i = 0; i < dim; ++i) {
-		a[i] += b[i];
+void VectorAdd(float* a, const float* b, const int dim) {
+  for (int i = 0; i < dim; ++i) {
+    a[i] += b[i];
+  }
+}
+void VectorPow(float* a, const float* b, const int dim, const float power) {
+  for (int i = 0; i < dim; ++i) {
+    a[i] = pow(b[i], power);
   }
 }
 

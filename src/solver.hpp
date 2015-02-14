@@ -58,6 +58,13 @@ private:
   void ComputeEntityGradient(Datum* datum);
   void ComputeCategoryGradient(Datum* datum);
 
+  void SGDUpdateEntity(const float lr);
+  void SGDUpdateCategory(const float lr);
+  void MomenUpdateEntity(const float lr);
+  void MomenUpdateCategory(const float lr);
+  void AdaGradUpdateEntity(const float lr);
+  void AdaGradUpdateCategory(const float lr);
+
   void SnapshotParameters(const string& param_filename);
   void SnapshotBlobs(const string& blobs_filename, const vector<Blob*>& blobs);
   void SnapshotBlobsBinary(const string& blobs_filename, const vector<Blob*>& blobs);
@@ -68,10 +75,18 @@ private:
       vector<Blob*>& blobs);
 
 private:
+  enum SolverType {
+    SGD = 0,
+    MOMEN,
+    ADAGRAD
+  };
+  SolverType solver_type_;
+  bool restore_history_;
+
   vector<Blob*> entities_;
   vector<Blob*> categories_;
   
-  // used in single-thread version
+  // Used in single-thread version
   vector<Blob*> entity_grads_;
   vector<Blob*> category_grads_;
   set<int> updated_entities_;
@@ -79,6 +94,11 @@ private:
   set<int>::const_iterator set_it_;
   map<int, int>::const_iterator map_it_;
  
+  // Used in Momentum/AdaGrad solver types
+  float momentum_;
+  vector<Blob*> entity_update_history_;
+  vector<Blob*> category_update_history_;
+  
   // 
   int num_entity_;
   int num_category_;

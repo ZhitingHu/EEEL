@@ -70,13 +70,15 @@ public:
     }  
   }
 
-  void Accumulate(const Blob* source, const float coeff = 1.0) {
+  // data_ = source * coeff + data_ * d_coeff
+  void Accumulate(const Blob* source, const float coeff = 1.0,
+      const float d_coeff = 1.0) {
 #ifdef DEBUG
     CHECK_EQ(count_, source->count());
 #endif
     const float* source_data = source->data();
     for (int idx = 0; idx < count_; ++idx) {
-      data_[idx] += source_data[idx] * coeff;
+      data_[idx] = source_data[idx] * coeff + data_[idx] * d_coeff;
 #ifdef DEBUG
     CHECK(!isnan(data_[idx]));
 #endif

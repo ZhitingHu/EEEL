@@ -11,7 +11,6 @@
 #include <iostream>
 #include <numeric>	// test use only
 
-
 using namespace std;
 
 // entity embedding parameters
@@ -38,7 +37,8 @@ DEFINE_int32(num_neg_sample, 50, "");
 DEFINE_int32(num_epoch_on_batch, 1, "Number of data sweeps on a minibatch.");
 DEFINE_int32(num_iter_on_entity, 1, "");
 DEFINE_int32(num_iter_on_category, 1, "");
-DEFINE_bool(openmp, false, "");
+DEFINE_string(solver_type, "SGD", "");
+DEFINE_double(momentum, 0.9, "");
 
 // Data
 // to be derived from dataset, to merge to read_data
