@@ -19,8 +19,8 @@ public:
   ~Solver();
   
   // Initialization
-  //void Init(); => merge into constructore
   void RandInit();
+  void InitHistory();
 
   // Optimizes based on minibatch
   // Assumes symmetric distance, i.e. d(e_i, e_o) = d(e_o, e_i)

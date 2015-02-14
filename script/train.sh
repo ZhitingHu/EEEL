@@ -8,10 +8,10 @@ progname=ee_main
 prog_path=${app_dir}/build/tools/${progname}
 
 # Data
-dataset_name=whole
+#dataset_name=whole
 #dataset_name=tech_parsed
-#dataset_name=apple
-dataset_path="${app_dir}/../EEEL/data/${dataset_name}"
+dataset_name=apple
+dataset_path="${app_dir}/../../EEEL/data/${dataset_name}"
 
 ## Parameters
 # embedding
@@ -19,28 +19,31 @@ dim_embedding=100;
 distance_metric_mode="DIAG";
 
 # training engine parameters
-num_iter=528000 # = 3 epoches
-eval_interval=1600
-num_iter_per_eval=20
-batch_size=500
+num_iter=100 # = 3 epoches
+eval_interval=1
+num_iter_per_eval=5
+batch_size=100
 
 # solver parameters
-solver_type="ADAGRAD"
+#solver_type="ADAGRAD"
+solver_type="MOMEN"
+#solver_type="SGD"
 #momentum=0.9
-learning_rate=10
-num_neg_sample=5
+learning_rate=0.1
+num_neg_sample=50
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-snapshot=32000
+snapshot=10
 #
-resume_path="/home/zhitingh/ml_proj/EEEL_dim100_whole_min_ca/output/eeel_whole_D100_MDIAG_lr0.2_N5_B500-whole-min-ca-336000"
-resume_iter=352000
+#resume_path="/home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_B100"
+resume_path="output/eeel_apple_D100_MDIAG_lr0.01_N50_B100-whole-min-ca-336000"
+resume_iter=50
 
 # Output
 output_dir=${app_dir}/output
 output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-whole-min-ca-336000"
+output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}_S${solver_type}"
 #rm -rf ${output_dir}
 mkdir -p ${output_dir}
 log_dir=${output_dir}/logs

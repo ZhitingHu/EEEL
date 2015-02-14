@@ -59,13 +59,6 @@ Solver::Solver(const int num_entity, const int num_category) :
     } else {
       LOG(FATAL) << "Unkown Solver Type " << solver_type;
     }
-    for (int i = 0; i < num_entity_; ++i) {
-      entity_update_history_.push_back(new Blob(dim_embedding_));
-    }
-    for (int i = 0; i < num_category_; ++i) {
-      category_update_history_.push_back(new Blob(
-          dim_embedding_, dim_embedding_));
-    }
   }
 }
 
@@ -100,6 +93,21 @@ void Solver::RandInit() {
         categories_[c_idx]->init_data_at((float)rand() / RAND_MAX, i, j);
       }
     }
+  }
+
+  // Initialize history
+  if (solver_type_ == SolverType::MOMEN || solver_type_ == SolverType::ADAGRAD) {
+    InitHistory();
+  }
+}
+
+void Solver::InitHistory() {
+  for (int i = 0; i < num_entity_; ++i) {
+    entity_update_history_.push_back(new Blob(dim_embedding_));
+  }
+  for (int i = 0; i < num_category_; ++i) {
+    category_update_history_.push_back(new Blob(
+        dim_embedding_, dim_embedding_));
   }
 }
 
@@ -229,6 +237,10 @@ void Solver::Restore(const string& snapshot_path, const int iter) {
     oss << snapshot_path << "/category_update_history_" << iter;
     RestoreBlobsBinary(oss.str(), num_category_, category_update_history_);  
     CHECK_EQ(num_category_, category_update_history_.size());
+  } else if (solver_type_ == SolverType::MOMEN || 
+      solver_type_ == SolverType::ADAGRAD) { 
+    // No appropriate history snapshot, initialize to 0
+    InitHistory();
   }
 }
 
