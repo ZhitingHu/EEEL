@@ -33,7 +33,7 @@ int main(){
    set<string> mentioned_entities;
 
    // Open files
-   string dataset_path = "/home/zhitingh/ml_proj/EEEL/data/apple/pruned_admin_and_meaningless_entities/";
+   string dataset_path = "/home/zhitingh/ml_proj/EEEL/data/whole_new/pruned_admin_and_meaningless_entities/";
 
    string entity_filename = "entity.txt";
    string entity_to_category_filename = "entity2category.txt";

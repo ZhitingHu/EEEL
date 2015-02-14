@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DATA_PATH=../data/tech_parsed
+DATA_PATH=/home/zhitingh/ml_proj/EEEL/data/whole_new/
 
 # 1) add number_of_fileds to the biginning of each line
 # 2) change : to <space> 

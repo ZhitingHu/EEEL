@@ -23,7 +23,7 @@ int main(){
    map<int, string> entity_id_name; 
 
    // Open files
-   string dataset_path = "/home/zhitingh/ml_proj/EEEL/data/apple/pruned_admin_and_meaningless_entities/";
+   string dataset_path = "/home/zhitingh/ml_proj/EEEL/data/whole_new/pruned_admin_and_meaningless_entities/";
    string entity_filename = "entity.txt";
    string pair_filename = "pair.txt";
    string pair_TF_filename = "pair_term_freq.txt";
