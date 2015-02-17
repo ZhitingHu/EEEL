@@ -12,7 +12,7 @@ prog_path=${app_dir}/build/tools/${progname}
 dataset_name=apple
 dataset_path="${app_dir}/../../EEEL/data/${dataset_name}"
 
-resume_iter=12000
+resume_iter=30
 
 ## Parameters
 # embedding
@@ -25,9 +25,7 @@ num_neg_sample=10
 batch_size=100
 
 # Output
-output_dir=${app_dir}/output
-output_dir="${output_dir}/eeel_${dataset_name}_D${dim_embedding}_M${distance_metric_mode}"
-output_dir="${output_dir}_lr${learning_rate}_N${num_neg_sample}_B${batch_size}-newweight-rectify"
+output_dir="/home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_B100"
 log_dir=${output_dir}/analysis_logs
 mkdir -p ${log_dir}
 

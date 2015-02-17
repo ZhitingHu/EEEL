@@ -42,9 +42,15 @@ int main(int argc, char *argv[]) {
   entity::Analyst analyst(FLAGS_resume_path, FLAGS_resume_iter);
 
   //vector<int> candidate_entities = {9336, 397504, 719040, 1480281, 131};
-  vector<int> candidate_entities = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20};
-  analyst.ComputeNearestNeibors(40, candidate_entities, 
+  //vector<int> candidate_entities = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20};
+  vector<int> candidate_entities = {0, 1, 2, 3, 20};
+  analyst.ComputeNearestNeibors(10, candidate_entities, 
       FLAGS_output_file_prefix);
+  
+  //vector<int> candidate_entities = {0, 20};
+  //vector<vector<vector<int> > > categories = {{{177},{178}}, {{231},{134},{16,177},{177}}};
+  //analyst.ComputeNearestNeiborsByCategories(10, candidate_entities, categories,
+  //    FLAGS_output_file_prefix);
 
   LOG(ERROR) << "Done."; 
  
