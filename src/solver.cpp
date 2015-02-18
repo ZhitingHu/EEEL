@@ -247,7 +247,7 @@ void Solver::Restore(const string& snapshot_path, const int iter) {
 void Solver::RestoreParameters(const string& param_filename) {
   LOG(INFO) << "Restoring from "<< param_filename;
 
-  ifstream param_snapshot(param_filename);
+  ifstream param_snapshot(param_filename.c_str());
   if (!param_snapshot.is_open()) {
     LOG(FATAL) << "fail to open:" << param_filename;
   }
@@ -283,7 +283,7 @@ void Solver::RestoreParameters(const string& param_filename) {
 void Solver::RestoreBlobs(const string& blobs_filename, vector<Blob*>& blobs) {
   LOG(INFO) << "Restoring from " << blobs_filename;
 
-  ifstream blobs_snapshot(blobs_filename);
+  ifstream blobs_snapshot(blobs_filename.c_str());
   string line;
   // line 1
   getline(blobs_snapshot, line);
@@ -311,7 +311,7 @@ void Solver::RestoreBlobsBinary(const string& blobs_filename,
    const int num_blob, vector<Blob*>& blobs) {
   LOG(INFO) << "Restoring from " << blobs_filename;
 
-  ifstream blobs_snapshot(blobs_filename, ios::in | ios::binary);
+  ifstream blobs_snapshot(blobs_filename.c_str(), ios::in | ios::binary);
   // meta info
   int count, num_row, num_col;
   blobs_snapshot.read((char*)&count, sizeof(count));

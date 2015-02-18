@@ -75,6 +75,10 @@ public:
     entity_ancestor_hierarchies_[entity_id] = ancestor_hierarchy;
   }
 
+  const map<int, float>& entity_ancestor_weights(const int entity_idx) {
+    return *(entity_ancestor_weights_[entity_idx]);
+  }
+
 private:
   void FindCommonAncestors(int entity_from, int entity_to,
       set<int>& common_ancestors);

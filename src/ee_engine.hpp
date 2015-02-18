@@ -29,6 +29,7 @@ public:
   Hierarchy* entity_category_hierarchy() { 
     return &entity_category_hierarchy_; 
   }
+  inline int num_entity() { return num_entity_; }
   
   Dataset* train_data() { return &train_data_; }  
 

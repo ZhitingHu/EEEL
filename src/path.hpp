@@ -43,7 +43,10 @@ public:
     CHECK(category_node_add_times_[category_id] < 2);
     category_node_add_times_[category_id]++;
 #endif
-    category_nodes_.push_back(category_id);
+    if (category_node_weights_.find(category_id) ==
+        category_node_weights_.end()) {
+      category_nodes_.push_back(category_id);
+    }
     category_node_weights_[category_id] += weight;
   }
 

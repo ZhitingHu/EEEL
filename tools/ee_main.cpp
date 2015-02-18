@@ -59,8 +59,10 @@ int main(int argc, char *argv[]) {
   FLAGS_alsologtostderr = 1;
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
-  entity::EEEngine ee_engine;
 
+  entity::Context::set_phase(entity::Context::TRAIN);
+
+  entity::EEEngine ee_engine;
   // read data
   ee_engine.ReadData();
   // training

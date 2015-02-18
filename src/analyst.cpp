@@ -50,6 +50,9 @@ Analyst::Analyst(const string& resume_path, const int iter) {
   ReadIdNames(dataset_path + "/" + entity_filename, entity_id_names_);
   const string& category_filename = context.get_string("category_filename");
   ReadIdNames(dataset_path + "/" + category_filename, category_id_names_);
+
+  num_entity_ = entity_id_names_.size();
+  CHECK_EQ(num_entity_, ee_engine_->num_entity()); 
 }
 
 void Analyst::ReadIdNames(const string& filename, map<int, string>& id_names) {
@@ -67,6 +70,51 @@ void Analyst::ReadIdNames(const string& filename, map<int, string>& id_names) {
 //==============================
 // NN by specified categories
 //==============================
+void Analyst::ComputeNearestNeiborsByCategories(
+    const int top_k, const int& candidate_entity, 
+    const vector<int>& categories, ofstream& output) {
+  Dataset* train_data = ee_engine_->train_data();
+  CHECK(entity_id_names_.find(candidate_entity) != entity_id_names_.end());
+  output << entity_id_names_[candidate_entity] << "\t" << candidate_entity << endl;
+  cout << entity_id_names_[candidate_entity] << "\t" << candidate_entity << endl;
+  for (int c_i = 0; c_i < categories.size(); ++c_i) {
+    const int category_id = categories[c_i];
+    output << category_id_names_[category_id] << ":" << category_id << "\t";
+    cout << category_id_names_[category_id] << ":" << category_id << "\t";
+  }
+  output << endl;
+  cout << endl;
+
+  // Compute NN
+  vector<pair<int, float> > nearest_entities;
+  ComputeEntityNearestNeiborsByCategories(
+      candidate_entity, top_k, categories, nearest_entities);
+  // Output
+  for (int rank = 0; rank < min(top_k, (int)nearest_entities.size()); ++rank) {
+    // TODO
+    int occur_cnt = 0;
+    if (train_data->positive_entities(candidate_entity).find(nearest_entities[rank].first)
+        != train_data->positive_entities(candidate_entity).end()) {
+      occur_cnt++;
+    }
+    if (train_data->positive_entities(nearest_entities[rank].first).find(candidate_entity)
+        != train_data->positive_entities(nearest_entities[rank].first).end()) {
+      occur_cnt++;
+    }
+    
+    output << entity_id_names_[nearest_entities[rank].first] << ":" 
+        << nearest_entities[rank].first << ":" 
+        << nearest_entities[rank].second << ":" << occur_cnt << "\t";
+    cout << entity_id_names_[nearest_entities[rank].first] << ":" 
+        << nearest_entities[rank].first << ":" 
+        << nearest_entities[rank].second << ":" << occur_cnt << "\t";
+  }
+  output << endl;
+  cout << endl;
+
+  output.flush();
+}
+
 void Analyst::ComputeNearestNeiborsByCategories(
     const int top_k, const vector<int>& candidate_entities,
     const vector<vector<vector<int> > >& categories, const string& output_path) {
@@ -99,7 +147,7 @@ void Analyst::ComputeNearestNeiborsByCategories(
       ComputeEntityNearestNeiborsByCategories(
           e_id, top_k, target_categories, nearest_entities);
       // Output
-      for (int rank = 0; rank < top_k; ++rank) {
+      for (int rank = 0; rank < min(top_k, (int)nearest_entities.size()); ++rank) {
         // TODO
         int occur_cnt = 0;
         if (train_data->positive_entities(e_id).find(nearest_entities[rank].first)
@@ -132,16 +180,46 @@ void Analyst::ComputeNearestNeiborsByCategories(
 void Analyst::ComputeEntityNearestNeiborsByCategories(
     const int entity, const int top_k, const vector<int>& categories,
     vector<pair<int, float> >& nearest_entities) {
-  Path* path = new Path();
+  nearest_entities.clear();
+  Hierarchy* hierarchy = ee_engine_->entity_category_hierarchy();
+  //
+  const map<int, float>& entity_ancestor_weights 
+      = hierarchy->entity_ancestor_weights(entity);
   for (int i = 0; i < categories.size(); ++i) {
-    path->AddCategoryNode(categories[i], 1.0);
-  } 
-  path->RefreshAggrDistMetric(solver_->categories());
+    const int cate_idx = categories[i] + num_entity_;
+    if (entity_ancestor_weights.find(cate_idx) == 
+        entity_ancestor_weights.end()) {
+      return;
+    }
+  }
+
 #ifdef OPENMP
   #pragma omp parallel for
 #endif
   for (int e_id = 0; e_id < solver_->num_entity(); ++e_id) {
     if (e_id == entity) { continue; }
+    // Construct path
+    Path* path = new Path();
+    bool subsumed = true;
+    const map<int, float>& eid_ancestor_weights
+        = hierarchy->entity_ancestor_weights(e_id);
+    for (int i = 0; i < categories.size(); ++i) {
+      const int c_id = categories[i];
+      const int c_idx = c_id + num_entity_;
+      if (eid_ancestor_weights.find(c_idx) == eid_ancestor_weights.end()) {
+        subsumed = false;
+        break;
+      }
+      path->AddCategoryNode(c_id, 
+         entity_ancestor_weights.find(c_idx)->second
+         + eid_ancestor_weights.find(c_idx)->second);
+    } 
+    if (!subsumed) {
+      delete path;
+      continue;
+    }
+    // Compute distance
+    path->RefreshAggrDistMetric(solver_->categories());
     float dist = solver_->ComputeDist(entity, e_id, path);
 
 #ifdef OPENMP
@@ -150,9 +228,8 @@ void Analyst::ComputeEntityNearestNeiborsByCategories(
     {  
     nearest_entities.push_back(pair<int, float>(e_id, dist));
     }
-
+    delete path;
   }
-  delete path;
 
   // sort
   std::partial_sort(nearest_entities.begin(), nearest_entities.begin() + top_k, 
@@ -234,6 +311,7 @@ void Analyst::ComputeEntityNearestNeibors(const int entity, const int top_k,
   std::partial_sort(nearest_entities.begin(), nearest_entities.begin() + top_k, 
       nearest_entities.end(), DesSortIntPairPairs());
 }
+
 
 
 } // namespace entity
