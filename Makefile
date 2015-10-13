@@ -2,7 +2,7 @@
 PROJECT := eeel
 
 # comment it to avoid omp
-OPENMP = 1
+OPENMP = 0
 # comment it to speedup
 #DEBUG = 1
 # comment it if use double

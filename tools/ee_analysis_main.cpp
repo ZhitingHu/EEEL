@@ -29,13 +29,13 @@ DEFINE_string(dataset_path, "data/tech/", "data path");
 DEFINE_string(output_file_prefix, "output/", "Results go here.");
 DEFINE_string(category_filename, "categories.txt", "category filename");
 DEFINE_string(entity_filename, "entity.txt", "entity filename");
-DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.bin", "entity-ancestor filename");
+//DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.bin", "entity-ancestor filename");
+DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.txt", "entity-ancestor filename");
 DEFINE_string(entity_to_category_filename, "entity2category.txt", "entity-category filename");
 DEFINE_string(hierarchy_filename, "hierarchy.txt", "hierarchy filename");
 DEFINE_string(hierarchy_id_filename, "hierarchy_id.txt", "hierarchy id filename");
 DEFINE_string(pair_filename, "pair.txt", "pair id filename");
 DEFINE_string(level_filename, "level.txt", "category level filename");
-
 
 void OutputEntityVectors() {
   entity::Solver solver;

@@ -92,7 +92,7 @@ void EEEngine::ReadData() {
 
   // parse hierarchy_id (category)
   LOG(INFO) << "Reading " << hierarchy_id_filename;
-  while (getline(hierarchy_id_file, line)){
+  while (getline(hierarchy_id_file, line)) {
     istringstream iss(line);
     vector<int> tokens((istream_iterator<int>(iss)), istream_iterator<int>());
     
@@ -118,8 +118,9 @@ void EEEngine::ReadData() {
     category_node->set_level(tokens[1]);
   }
 
-  ReadEntityAncestorFile_bin(dataset_path + "/" + entity_to_ancestor_filename);
-  //ReadEntityAncestorFile_txt(dataset_path + "/" + entity_to_ancestor_filename);
+  /// read from binary files for speedup
+  //ReadEntityAncestorFile_bin(dataset_path + "/" + entity_to_ancestor_filename);
+  ReadEntityAncestorFile_txt(dataset_path + "/" + entity_to_ancestor_filename);
   //ReadEntityAncestorFile_txt_bac(dataset_path + "/" + entity_to_ancestor_filename);
 
   ReadEntityPairFile(dataset_path + "/" + pair_filename);
@@ -479,6 +480,7 @@ void EEEngine::Start() {
   bool test = false;
   thread minibatch_creator;
 
+
   // skip initial minibatches
   for (int skip_idx = 0; skip_idx < resume_iter; ++skip_idx) {
     workload_mgr.IncreaseDataIdxByBatchSize();
@@ -486,6 +488,7 @@ void EEEngine::Start() {
   // create the first minibatch
   workload_mgr.GetBatchDataIdx(workload_mgr.GetBatchSize(), 
       next_minibatch_data_idx);
+  LOG(INFO) << "Segfault here.";
   ThreadCreateMinibatch(&next_minibatch_data_idx, &next_minibatch);
   workload_mgr.IncreaseDataIdxByBatchSize();
 

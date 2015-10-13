@@ -14,8 +14,8 @@
 using namespace std;
 
 // entity embedding parameters
-DEFINE_int32(dim_embedding, 100, "");
-DEFINE_string(distance_metric_mode, "DIAG", "");
+DEFINE_int32(dim_embedding, 100, "dimension of entity vectors.");
+DEFINE_string(distance_metric_mode, "DIAG", "DIAG: distance metrics as diagonal matrixes.");
 
 // Training Engine Parameters
 DEFINE_int32(num_iter, 1, "Number of iteration.");
@@ -24,20 +24,17 @@ DEFINE_int32(num_iter_per_eval, 1, "Number of iteration per evaluation");
 DEFINE_int32(batch_size, 50, "Size of batch");
 DEFINE_int32(snapshot, 50, "Number of iterations between two snapshots");
 DEFINE_string(resume_path, "", "Results to be resumed");
-DEFINE_int32(resume_iter, -1, "Iteration of results");
-
-// Parameter Server (not used)
-DEFINE_int32(client_id, 0, "Client ID");
-DEFINE_int32(num_client, 1, "Number of client");
-DEFINE_int32(num_thread, 1, "Number of thread");
+DEFINE_int32(resume_iter, -1, "Iteration of results to be resumed");
 
 // Solver Parameters
 DEFINE_double(learning_rate, 0.1, "Initial step size");
 DEFINE_int32(num_neg_sample, 50, "");
 DEFINE_int32(num_epoch_on_batch, 1, "Number of data sweeps on a minibatch.");
-DEFINE_int32(num_iter_on_entity, 1, "");
-DEFINE_int32(num_iter_on_category, 1, "");
-DEFINE_string(solver_type, "SGD", "");
+DEFINE_int32(num_iter_on_entity, 1,
+  "Number of iterations updating entity vectors per coordinate-descent iteration");
+DEFINE_int32(num_iter_on_category, 1,
+  "Number of iterations updating category matrix per coordinate-descent iteration");
+DEFINE_string(solver_type, "SGD", "SGD using momentum");
 DEFINE_double(momentum, 0.9, "");
 
 // Data
@@ -47,13 +44,20 @@ DEFINE_string(dataset_path, "data/tech/", "data path");
 DEFINE_string(output_file_prefix, "output/", "Results go here.");
 DEFINE_string(category_filename, "categories.txt", "category filename");
 DEFINE_string(entity_filename, "entity.txt", "entity filename");
-DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.bin", "entity-ancestor filename");
+//DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.bin", "entity-ancestor filename");
+DEFINE_string(entity_to_ancestor_filename, "entity2ancestor.txt", "entity-ancestor filename");
 DEFINE_string(entity_to_category_filename, "entity2category.txt", "entity-category filename");
 DEFINE_string(hierarchy_id_filename, "hierarchy_id.txt", "hierarchy id filename");
 DEFINE_string(pair_filename, "pair.txt", "pair id filename");
 DEFINE_string(level_filename, "level.txt", "category level filename");
 
 DEFINE_int32(num_test_data, 0, "Number of testing data.");
+
+// Parameter Server (not used)
+DEFINE_int32(client_id, 0, "Client ID");
+DEFINE_int32(num_client, 1, "Number of client");
+DEFINE_int32(num_thread, 1, "Number of thread");
+
 
 int main(int argc, char *argv[]) {
   FLAGS_alsologtostderr = 1;
@@ -66,6 +70,8 @@ int main(int argc, char *argv[]) {
   // read data
   ee_engine.ReadData();
   // training
+  
+  LOG(INFO) << "here ";
   ee_engine.Start();
 
   LOG(INFO) << "Entity Embedding finished and shut down!";

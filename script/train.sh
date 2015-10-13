@@ -34,11 +34,11 @@ num_neg_sample=50
 num_epoch_on_batch=1
 num_iter_on_entity=1
 num_iter_on_category=1
-snapshot=10
+snapshot=1000
 #
 #resume_path="/home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_B100"
-resume_path="output/eeel_apple_D100_MDIAG_lr0.01_N50_B100-whole-min-ca-336000"
-resume_iter=50
+#resume_path="output/eeel_apple_D100_MDIAG_lr0.01_N50_B100-whole-min-ca-336000"
+#resume_iter=50
 
 # Output
 output_dir=${app_dir}/output
@@ -73,6 +73,6 @@ GLOG_vmodule="" \
     --num_iter_on_category $num_iter_on_category \
     --dataset_path $dataset_path \
     --output_file_prefix $output_dir \
-    --snapshot $snapshot \
-    --resume_path $resume_path \
-    --resume_iter $resume_iter
+    --snapshot $snapshot #\
+    #--resume_path $resume_path \
+    #--resume_iter $resume_iter
