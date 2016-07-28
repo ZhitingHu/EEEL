@@ -8,7 +8,6 @@ progname=ee_analysis_main
 prog_path=${app_dir}/build/tools/${progname}
 
 ## Data
-#dataset_name=whole
 #dataset_name=tech
 dataset_name=apple
 dataset_path="${app_dir}/../../EEEL/data/${dataset_name}"
@@ -27,8 +26,7 @@ num_neg_sample=5
 batch_size=500
 
 # Output
-#output_dir="/home/zhitingh/ml_proj/EEEL_dim100_whole_min_ca/output/eeel_whole_D100_MDIAG_lr0.2_N5_B500-whole-min-ca-704000"
-output_dir="/home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_B100"
+output_dir="./output"
 log_dir=${output_dir}/analysis_logs
 mkdir -p ${log_dir}
 

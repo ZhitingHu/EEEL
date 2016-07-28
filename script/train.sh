@@ -8,8 +8,6 @@ progname=ee_main
 prog_path=${app_dir}/build/tools/${progname}
 
 # Data
-#dataset_name=whole
-#dataset_name=tech_parsed
 dataset_name=apple
 dataset_path="${app_dir}/../../EEEL/data/${dataset_name}"
 
@@ -36,8 +34,7 @@ num_iter_on_entity=1
 num_iter_on_category=1
 snapshot=1000
 #
-#resume_path="/home/zhitingh/ml_proj/EEEL/output/eeel_apple_D100_MDIAG_lr0.01_N50_B100"
-#resume_path="output/eeel_apple_D100_MDIAG_lr0.01_N50_B100-whole-min-ca-336000"
+#resume_path="./output/eeel_apple_D100_MDIAG_lr0.01_N50_B100"
 #resume_iter=50
 
 # Output
